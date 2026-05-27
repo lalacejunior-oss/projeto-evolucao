@@ -315,6 +315,199 @@ export default function App() {
   );
 }
 
+
+
+// ════════════════════════════════════════════════════════════════════
+// ROOT
+// ════════════════════════════════════════════════════════════════════
+export default function App() {
+  const [uid, setUid]     = useState(() => DB.get("uid", null));
+  const [tab, setTab]     = useState("home");
+  const [medidas, setMedidas] = useState(() => ({
+    wallace: DB.get("med_wallace", PERFIS.wallace.mediasIniciais),
+    suellen: DB.get("med_suellen", PERFIS.suellen.mediasIniciais),
+  }));
+
+  const usuario = uid ? PERFIS[uid] : null;
+  const med     = uid ? medidas[uid] : null;
+  const treinos = uid === "wallace" ? TREINOS_W : TREINOS_S;
+  const nutri   = uid ? NUTRI[uid] : null;
+
+  const salvarMedida = (campo, val) => {
+    const novas = { ...medidas[uid], [campo]: parseFloat(val)||0 };
+    setMedidas(p => { const n={...p,[uid]:novas}; DB.set("med_"+uid, novas); return n; });
+  };
+
+  const login  = id => { setUid(id); DB.set("uid", id); setTab("home"); };
+  const logout = ()  => { setUid(null); DB.set("uid", null); };
+
+  if (!uid) return <Splash onLogin={login} />;
+
+  return (
+    <Frame
+      usuario={usuario} med={med} tab={tab} setTab={setTab}
+      treinos={treinos} nutri={nutri}
+      onLogout={logout} salvarMedida={salvarMedida}
+      outro={medidas[uid==="wallace"?"suellen":"wallace"]}
+      outroPerfil={PERFIS[uid==="wallace"?"suellen":"wallace"]}
+    />
+  );
+}
+
+
+// ════════════════════════════════════════════════════════════════════
+// DESIGN SYSTEM — tokens, helpers visuais
+// ════════════════════════════════════════════════════════════════════
+
+// Spacing scale
+const sp = { xs:4, sm:8, md:12, lg:16, xl:20, xxl:28, xxxl:40 };
+
+// Radius scale  
+const r = { sm:8, md:12, lg:16, xl:20, pill:100 };
+
+// Typography
+const font = {
+  display: "'Bebas Neue',cursive",
+  body:    "'DM Sans',sans-serif",
+};
+
+// Semantic colors (light-independent)
+const C = {
+  bg:      "#07071A",
+  surface: "#0E0E24",
+  surfaceHigh: "#141430",
+  border:  "#1C1C3A",
+  borderHi:"#2A2A50",
+  text:    "#F0F0FF",
+  textSub: "#8888AA",
+  textMuted:"#44445A",
+  success: "#22C55E",
+  warning: "#F59E0B",
+  danger:  "#EF4444",
+  info:    "#3B82F6",
+};
+
+// Shared component styles
+const cs = {
+  // Pill label above sections
+  label: {
+    fontSize:10, fontWeight:700, letterSpacing:2,
+    textTransform:"uppercase", fontFamily:font.body,
+  },
+  // Card base
+  card: {
+    background:C.surface, borderRadius:r.xl,
+    padding:sp.lg, marginBottom:sp.md,
+    border:`1px solid ${C.border}`,
+  },
+  // Small metric box
+  metricBox: {
+    background:C.surfaceHigh, borderRadius:r.lg,
+    padding:`${sp.md}px ${sp.sm}px`,
+    display:"flex", flexDirection:"column",
+    alignItems:"center", gap:4,
+  },
+  // Primary button
+  btn: {
+    width:"100%", padding:"16px 0",
+    borderRadius:r.lg, border:"none",
+    color:"#fff", fontWeight:700,
+    fontSize:14, letterSpacing:1.5,
+    cursor:"pointer", display:"block",
+    textAlign:"center", fontFamily:font.body,
+    marginBottom:sp.md,
+  },
+  // Ghost button
+  btnGhost: {
+    background:"none", border:"none",
+    color:C.textSub, fontSize:13,
+    cursor:"pointer", padding:`${sp.sm}px 0`,
+    display:"block", fontFamily:font.body,
+    letterSpacing:.5,
+  },
+  // Thin progress track
+  track: (h=6) => ({
+    background:C.surfaceHigh, borderRadius:r.pill,
+    height:h, overflow:"hidden",
+  }),
+  fill: (w, bg, h=6) => ({
+    height:`${h}px`, width:`${w}%`,
+    background:bg, borderRadius:r.pill,
+    transition:"width .5s cubic-bezier(.4,0,.2,1)",
+  }),
+  // Screen wrapper
+  screen: {
+    padding:`0 ${sp.lg}px`,
+    fontFamily:font.body,
+    minHeight:"100vh",
+  },
+  // Page header spacing
+  pageHead: {
+    paddingTop:sp.xl, paddingBottom:sp.lg,
+  },
+};
+
+// ════════════════════════════════════════════════════════════════════
+// MICRO COMPONENTS — atoms reutilizáveis
+// ════════════════════════════════════════════════════════════════════
+
+function Pill({ children, color, bg }) {
+  return (
+    <span style={{
+      display:"inline-flex", alignItems:"center",
+      padding:"3px 10px", borderRadius:r.pill,
+      fontSize:11, fontWeight:600,
+      color: color || C.textSub,
+      background: bg || C.surfaceHigh,
+      fontFamily:font.body,
+    }}>
+      {children}
+    </span>
+  );
+}
+
+function Label({ children, color }) {
+  return (
+    <div style={{...cs.label, color: color || C.textMuted, marginBottom:sp.sm}}>
+      {children}
+    </div>
+  );
+}
+
+function ProgressBar({ value, color, height=6, glow=false }) {
+  return (
+    <div style={cs.track(height)}>
+      <div style={{
+        ...cs.fill(Math.min(100,Math.max(0,value)), color, height),
+        boxShadow: glow ? `0 0 8px ${color}80` : "none",
+      }}/>
+    </div>
+  );
+}
+
+function Metric({ icon, value, label, color, size="md" }) {
+  const valSize = size === "lg" ? 28 : size === "sm" ? 14 : 20;
+  return (
+    <div style={cs.metricBox}>
+      {icon && <span style={{fontSize: size === "lg" ? 22 : 16}}>{icon}</span>}
+      <span style={{
+        fontFamily:font.display, fontSize:valSize,
+        color: color || C.text, lineHeight:1,
+        letterSpacing:.5,
+      }}>{value}</span>
+      <span style={{fontSize:9, color:C.textMuted, letterSpacing:1, textTransform:"uppercase"}}>{label}</span>
+    </div>
+  );
+}
+
+function Divider() {
+  return <div style={{height:1, background:C.border, margin:`${sp.md}px 0`}}/>;
+}
+
+function Spacer({ h=sp.md }) {
+  return <div style={{height:h}}/>;
+}
+
 // ════════════════════════════════════════════════════════════════════
 // SPLASH / LOGIN
 // ════════════════════════════════════════════════════════════════════
@@ -322,109 +515,148 @@ function Splash({ onLogin }) {
   const [frase] = useState(rnd(FRASES));
 
   return (
-    <div style={S.splash}>
+    <div style={{
+      minHeight:"100vh", background:C.bg,
+      display:"flex", alignItems:"center", justifyContent:"center",
+      fontFamily:font.body, overflow:"hidden", position:"relative",
+    }}>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap');
         *{box-sizing:border-box;margin:0;padding:0;}
-        body{background:#060612;overflow-x:hidden;}
-        @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
-        @keyframes glow{0%,100%{opacity:.6}50%{opacity:1}}
-        @keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
-        @keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.04)}}
-        @keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
-        .card-hover:hover{transform:translateY(-6px) scale(1.02)!important;transition:all .25s ease!important;}
-        input:focus{outline:none;}
-        input[type=range]{-webkit-appearance:none;height:6px;border-radius:3px;}
-        input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;}
-        ::-webkit-scrollbar{width:0;height:0;}
+        body{background:#07071A;overflow-x:hidden;-webkit-font-smoothing:antialiased;}
+        @keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+        @keyframes floatY{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+        @keyframes pulseGlow{0%,100%{opacity:.5}50%{opacity:1}}
+        @keyframes timerTick{from{transform:scale(1)}to{transform:scale(.96)}}
+        ::-webkit-scrollbar{width:0}
+        input[type=range]{-webkit-appearance:none;height:4px;border-radius:2px;outline:none;}
+        input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;cursor:pointer;}
+        .hover-lift{transition:transform .2s ease,box-shadow .2s ease;}
+        .hover-lift:hover{transform:translateY(-3px);}
+        .tap-scale:active{transform:scale(.97);}
       `}</style>
 
-      {/* ambient blobs */}
-      <div style={{position:"fixed",inset:0,pointerEvents:"none",overflow:"hidden",zIndex:0}}>
-        <div style={{position:"absolute",top:"-20%",left:"-20%",width:500,height:500,borderRadius:"50%",background:"#00D4FF0A",filter:"blur(80px)",animation:"float 8s ease-in-out infinite"}}/>
-        <div style={{position:"absolute",bottom:"-20%",right:"-20%",width:500,height:500,borderRadius:"50%",background:"#FF5FA00A",filter:"blur(80px)",animation:"float 8s ease-in-out infinite",animationDelay:"4s"}}/>
+      {/* ambient */}
+      <div style={{position:"fixed",inset:0,pointerEvents:"none",overflow:"hidden"}}>
+        <div style={{position:"absolute",top:"-30%",left:"-20%",width:480,height:480,borderRadius:"50%",background:"#00D4FF06",filter:"blur(70px)",animation:"floatY 10s ease-in-out infinite"}}/>
+        <div style={{position:"absolute",bottom:"-30%",right:"-20%",width:480,height:480,borderRadius:"50%",background:"#FF5FA006",filter:"blur(70px)",animation:"floatY 10s ease-in-out infinite",animationDelay:"5s"}}/>
       </div>
 
-      <div style={{position:"relative",zIndex:1,width:"100%",maxWidth:440,padding:"0 20px"}}>
+      <div style={{position:"relative",zIndex:1,width:"100%",maxWidth:420,padding:"0 20px"}}>
+
         {/* logo */}
-        <div style={{textAlign:"center",marginBottom:32,animation:"fadeUp .6s ease"}}>
-          <div style={{fontSize:64,marginBottom:8,animation:"float 3s ease-in-out infinite",display:"inline-block"}}>⚡</div>
-          <div style={{fontFamily:"'Bebas Neue',cursive",fontSize:52,letterSpacing:8,color:"#fff",lineHeight:1}}>PROJETO</div>
-          <div style={{fontFamily:"'Bebas Neue',cursive",fontSize:26,letterSpacing:16,color:"#00D4FF",marginTop:4}}>EVOLUÇÃO</div>
-          <div style={{fontSize:12,color:"#666",letterSpacing:3,marginTop:8,fontFamily:"'DM Sans',sans-serif"}}>SUA TRANSFORMAÇÃO COMEÇA AGORA</div>
+        <div style={{textAlign:"center",marginBottom:sp.xl,animation:"fadeUp .5s ease"}}>
+          <div style={{fontSize:56,marginBottom:sp.sm,display:"inline-block",animation:"floatY 3s ease-in-out infinite"}}>⚡</div>
+          <div style={{fontFamily:font.display,fontSize:48,letterSpacing:6,color:C.text,lineHeight:1}}>PROJETO</div>
+          <div style={{fontFamily:font.display,fontSize:22,letterSpacing:14,color:"#00D4FF",marginTop:2}}>EVOLUÇÃO</div>
         </div>
 
-        {/* quote */}
-        <div style={{background:"#0d0d20",borderRadius:16,padding:"14px 18px",marginBottom:28,borderLeft:"3px solid #00D4FF40",animation:"fadeUp .6s ease .1s both"}}>
-          <div style={{fontSize:9,color:"#00D4FF",letterSpacing:3,marginBottom:6,fontFamily:"'DM Sans',sans-serif",fontWeight:700}}>✦ MOTIVAÇÃO</div>
-          <p style={{fontSize:13,color:"#aaa",lineHeight:1.7,fontStyle:"italic",fontFamily:"'DM Sans',sans-serif"}}>"{frase}"</p>
+        {/* frase */}
+        <div style={{
+          background:C.surface, borderRadius:r.xl,
+          padding:`${sp.md}px ${sp.lg}px`,
+          marginBottom:sp.xl,
+          borderLeft:`2px solid #00D4FF33`,
+          animation:"fadeUp .5s ease .1s both",
+        }}>
+          <p style={{fontSize:13,color:C.textSub,lineHeight:1.7,fontStyle:"italic",margin:0}}>
+            "{frase}"
+          </p>
         </div>
 
-        {/* cards */}
-        <div style={{fontSize:10,color:"#444",letterSpacing:4,textAlign:"center",marginBottom:16,fontFamily:"'DM Sans',sans-serif"}}>SELECIONE SEU PERFIL</div>
-        <div style={{display:"flex",gap:14,animation:"fadeUp .6s ease .2s both"}}>
+        {/* profile cards */}
+        <div style={{display:"flex",gap:sp.md,animation:"fadeUp .5s ease .2s both"}}>
           {[PERFIS.wallace, PERFIS.suellen].map(u => {
-            const imcV  = imc(u.mediasIniciais.peso, u.altura);
-            const prog  = pct(u.mediasIniciais.peso, u.pesoInicial, u.pesoMeta);
+            const imcV = imc(u.mediasIniciais.peso, u.altura);
+            const prog = pct(u.mediasIniciais.peso, u.pesoInicial, u.pesoMeta);
             return (
-              <button key={u.id} className="card-hover"
+              <button key={u.id} className="hover-lift tap-scale"
                 onClick={() => onLogin(u.id)}
-                style={{flex:1,background:"#0d0d20",border:"1px solid #1e1e35",borderRadius:22,padding:"22px 14px",cursor:"pointer",display:"flex",flexDirection:"column",alignItems:"center",gap:10,transition:"all .2s ease",fontFamily:"'DM Sans',sans-serif"}}>
-                {/* foto */}
-                <div style={{position:"relative",marginBottom:4}}>
-                  <div style={{width:84,height:84,borderRadius:"50%",overflow:"hidden",border:`3px solid ${u.cor}`,boxShadow:`0 0 20px ${u.corGlow}`}}>
-                    <img src={u.foto} alt={u.nome} style={{width:"100%",height:"100%",objectFit:"cover",objectPosition:"top"}}/>
-                  </div>
-                  <div style={{position:"absolute",bottom:2,right:2,width:16,height:16,borderRadius:"50%",background:u.cor,border:"2px solid #0d0d20",display:"flex",alignItems:"center",justifyContent:"center",fontSize:8,color:"#000",fontWeight:900}}>✓</div>
+                style={{
+                  flex:1, background:C.surface,
+                  border:`1px solid ${C.border}`,
+                  borderRadius:r.xl+4, padding:`${sp.xl}px ${sp.md}px`,
+                  cursor:"pointer", display:"flex", flexDirection:"column",
+                  alignItems:"center", gap:sp.sm,
+                  fontFamily:font.body,
+                  transition:"border-color .2s, box-shadow .2s",
+                }}>
+                {/* avatar */}
+                <div style={{
+                  width:80, height:80, borderRadius:"50%",
+                  overflow:"hidden",
+                  border:`2.5px solid ${u.cor}`,
+                  boxShadow:`0 0 0 4px ${u.cor}18`,
+                  flexShrink:0,
+                }}>
+                  <img src={u.foto} alt={u.nome} style={{width:"100%",height:"100%",objectFit:"cover",objectPosition:"top"}}/>
                 </div>
-                <div style={{fontFamily:"'Bebas Neue',cursive",fontSize:24,letterSpacing:3,color:u.cor}}>{u.nome.toUpperCase()}</div>
-                <div style={{fontSize:11,color:"#888",textAlign:"center",lineHeight:1.5}}>{u.objetivo}</div>
-                {/* mini stats */}
-                <div style={{display:"flex",width:"100%",background:"#111120",borderRadius:10,overflow:"hidden"}}>
-                  {[[u.mediasIniciais.peso+"kg","Peso"],[imcV,"IMC"],[u.pesoMeta+"kg","Meta"]].map(([v,l],i) => (
-                    <div key={l} style={{flex:1,padding:"8px 0",textAlign:"center",borderRight:i<2?"1px solid #1e1e35":"none"}}>
-                      <div style={{fontSize:15,fontWeight:700,color:"#fff"}}>{v}</div>
-                      <div style={{fontSize:9,color:"#666",letterSpacing:1}}>{l}</div>
+
+                <div style={{fontFamily:font.display,fontSize:22,letterSpacing:3,color:u.cor}}>{u.nome.toUpperCase()}</div>
+                <div style={{fontSize:11,color:C.textSub,textAlign:"center",lineHeight:1.5,paddingBottom:4}}>{u.objetivo}</div>
+
+                {/* stats row */}
+                <div style={{
+                  display:"grid", gridTemplateColumns:"1fr 1fr 1fr",
+                  width:"100%", background:C.surfaceHigh,
+                  borderRadius:r.md, overflow:"hidden",
+                }}>
+                  {[[u.mediasIniciais.peso+"kg","Peso"],[imcV,"IMC"],[u.pesoMeta+"kg","Meta"]].map(([v,l],i,arr)=>(
+                    <div key={l} style={{
+                      padding:"8px 0", textAlign:"center",
+                      borderRight: i<arr.length-1 ? `1px solid ${C.border}` : "none",
+                    }}>
+                      <div style={{fontSize:14,fontWeight:600,color:C.text}}>{v}</div>
+                      <div style={{fontSize:9,color:C.textMuted,letterSpacing:1}}>{l}</div>
                     </div>
                   ))}
                 </div>
+
                 {/* progress */}
                 <div style={{width:"100%"}}>
-                  <div style={{display:"flex",justifyContent:"space-between",marginBottom:4}}>
-                    <span style={{fontSize:9,color:"#666",letterSpacing:1}}>PROGRESSO</span>
+                  <div style={{display:"flex",justifyContent:"space-between",marginBottom:5}}>
+                    <span style={{fontSize:9,color:C.textMuted,letterSpacing:1}}>PROGRESSO</span>
                     <span style={{fontSize:9,color:u.cor,fontWeight:700}}>{prog.toFixed(0)}%</span>
                   </div>
-                  <div style={{background:"#1e1e35",borderRadius:20,height:5,overflow:"hidden"}}>
-                    <div style={{height:"100%",width:`${prog}%`,background:`linear-gradient(90deg,${u.cor},${u.corEscura})`,borderRadius:20}}/>
-                  </div>
+                  <ProgressBar value={prog} color={`linear-gradient(90deg,${u.cor},${u.corEscura})`} glow/>
                 </div>
-                {/* btn */}
-                <div style={{width:"100%",padding:"11px 0",borderRadius:12,background:`linear-gradient(135deg,${u.cor},${u.corEscura})`,color:"#fff",fontWeight:700,fontSize:12,letterSpacing:2,textAlign:"center"}}>ENTRAR →</div>
+
+                {/* cta */}
+                <div style={{
+                  width:"100%",padding:"12px 0",
+                  borderRadius:r.md,
+                  background:`linear-gradient(135deg,${u.cor},${u.corEscura})`,
+                  color:"#fff",fontWeight:700,fontSize:12,
+                  letterSpacing:1.5,textAlign:"center",
+                }}>ENTRAR</div>
               </button>
             );
           })}
         </div>
 
-        <div style={{textAlign:"center",fontSize:10,color:"#2a2a3a",marginTop:24,fontFamily:"'DM Sans',sans-serif",letterSpacing:2}}>⚡ PROJETO EVOLUÇÃO · USO PESSOAL</div>
+        <div style={{textAlign:"center",fontSize:10,color:C.textMuted,marginTop:sp.xl,letterSpacing:2}}>
+          USO PESSOAL · WALLACE & SUELLEN
+        </div>
       </div>
     </div>
   );
 }
 
 // ════════════════════════════════════════════════════════════════════
-// FRAME (shell + nav)
+// FRAME
 // ════════════════════════════════════════════════════════════════════
 function Frame({ usuario, med, tab, setTab, treinos, nutri, onLogout, salvarMedida, outro, outroPerfil }) {
   const ABAS = [
     {id:"home",     ic:"⚡", lb:"Início"},
     {id:"treino",   ic:"💪", lb:"Treino"},
     {id:"cardio",   ic:"🏃", lb:"Cardio"},
-    {id:"evolucao", ic:"📈", lb:"Evolução"},
+    {id:"evolucao", ic:"📈", lb:"Progresso"},
     {id:"pratico",  ic:"🍳", lb:"Comer"},
     {id:"perfil",   ic:"👤", lb:"Perfil"},
   ];
+
   return (
-    <div style={{background:"#060612",minHeight:"100vh",maxWidth:480,margin:"0 auto",fontFamily:"'DM Sans',sans-serif",color:"#fff",position:"relative"}}>
+    <div style={{background:C.bg,minHeight:"100vh",maxWidth:480,margin:"0 auto",fontFamily:font.body,color:C.text,position:"relative"}}>
       <div style={{paddingBottom:72}}>
         {tab==="home"     && <Home        usuario={usuario} med={med} treinos={treinos} setTab={setTab} onLogout={onLogout} outro={outro} outroPerfil={outroPerfil}/>}
         {tab==="treino"   && <Treino      usuario={usuario} treinos={treinos}/>}
@@ -433,16 +665,47 @@ function Frame({ usuario, med, tab, setTab, treinos, nutri, onLogout, salvarMedi
         {tab==="pratico"  && <AlimPratica usuario={usuario} nutri={nutri}/>}
         {tab==="perfil"   && <Perfil      usuario={usuario} med={med} onLogout={onLogout} outroPerfil={outroPerfil} outroMed={outro}/>}
       </div>
-      {/* bottom nav */}
-      <nav style={{position:"fixed",bottom:0,left:"50%",transform:"translateX(-50%)",width:"100%",maxWidth:480,background:"rgba(6,6,18,.95)",borderTop:"1px solid #1e1e35",backdropFilter:"blur(20px)",display:"flex",zIndex:100}}>
-        {ABAS.map(a => (
-          <button key={a.id} onClick={()=>setTab(a.id)}
-            style={{flex:1,background:"none",border:"none",cursor:"pointer",padding:"10px 2px 8px",display:"flex",flexDirection:"column",alignItems:"center",gap:2,position:"relative"}}>
-            {tab===a.id && <div style={{position:"absolute",top:0,left:"50%",transform:"translateX(-50%)",width:24,height:2,borderRadius:2,background:usuario.cor}}/>}
-            <span style={{fontSize:18,lineHeight:1}}>{a.ic}</span>
-            <span style={{fontSize:9,letterSpacing:.5,fontWeight:tab===a.id?700:400,color:tab===a.id?usuario.cor:"#555"}}>{a.lb}</span>
-          </button>
-        ))}
+
+      {/* Nav bar */}
+      <nav style={{
+        position:"fixed", bottom:0,
+        left:"50%", transform:"translateX(-50%)",
+        width:"100%", maxWidth:480,
+        background:"rgba(7,7,26,.92)",
+        backdropFilter:"blur(24px)",
+        borderTop:`1px solid ${C.border}`,
+        display:"flex", zIndex:100,
+        paddingBottom:"env(safe-area-inset-bottom)",
+      }}>
+        {ABAS.map(a => {
+          const active = tab === a.id;
+          return (
+            <button key={a.id} onClick={()=>setTab(a.id)}
+              style={{
+                flex:1, background:"none", border:"none",
+                cursor:"pointer", padding:"11px 2px 9px",
+                display:"flex", flexDirection:"column",
+                alignItems:"center", gap:3, position:"relative",
+                transition:"opacity .15s",
+              }}>
+              {active && (
+                <div style={{
+                  position:"absolute", top:0,
+                  left:"50%", transform:"translateX(-50%)",
+                  width:20, height:2, borderRadius:r.pill,
+                  background:usuario.cor,
+                }}/>
+              )}
+              <span style={{fontSize:19,lineHeight:1,opacity:active?1:.45}}>{a.ic}</span>
+              <span style={{
+                fontSize:9, letterSpacing:.3,
+                fontWeight:active?700:400,
+                color:active?usuario.cor:C.textMuted,
+                transition:"color .15s",
+              }}>{a.lb}</span>
+            </button>
+          );
+        })}
       </nav>
     </div>
   );
@@ -452,182 +715,234 @@ function Frame({ usuario, med, tab, setTab, treinos, nutri, onLogout, salvarMedi
 // HOME
 // ════════════════════════════════════════════════════════════════════
 function Home({ usuario, med, treinos, setTab, onLogout, outro, outroPerfil }) {
-  const [frase]    = useState(rnd(FRASES));
-  const [agua,  setAgua]  = useState(() => DB.get("agua_"+usuario.id+"_"+new Date().toDateString(), 0));
-  const [checkin, setCheckin] = useState(() => DB.get("ci_"+usuario.id+"_"+new Date().toDateString(), false));
-  const [streak] = useState(() => DB.get("streak_"+usuario.id, 7));
+  const [frase]   = useState(rnd(FRASES));
+  const [agua,     setAgua]    = useState(() => DB.get("agua_"+usuario.id+"_"+new Date().toDateString(), 0));
+  const [checkin,  setCheckin] = useState(() => DB.get("ci_"+usuario.id+"_"+new Date().toDateString(), false));
+  const [streak]               = useState(() => DB.get("streak_"+usuario.id, 7));
 
-  const salvarAgua = (v) => { setAgua(v); DB.set("agua_"+usuario.id+"_"+new Date().toDateString(), v); };
-  const doCheckin = () => {
-    if (!checkin) {
-      setCheckin(true);
-      DB.set("ci_"+usuario.id+"_"+new Date().toDateString(), true);
-    }
+  const salvarAgua = v => { setAgua(v); DB.set("agua_"+usuario.id+"_"+new Date().toDateString(), v); };
+  const doCheckin  = () => {
+    if (!checkin) { setCheckin(true); DB.set("ci_"+usuario.id+"_"+new Date().toDateString(), true); }
   };
 
-  const imcV   = imc(med.peso, usuario.altura);
-  const imcC   = imcCor(imcV);
-  const imcT   = imcTxt(imcV);
-  const prog   = pct(med.peso, usuario.pesoInicial, usuario.pesoMeta);
+  const imcV    = imc(med.peso, usuario.altura);
+  const prog    = pct(med.peso, usuario.pesoInicial, usuario.pesoMeta);
   const perdido = (usuario.pesoInicial - med.peso).toFixed(1);
   const falta   = (med.peso - usuario.pesoMeta).toFixed(1);
-
   const diaIdx  = DIAS_TREINO[new Date().getDay()];
-  const treinoHoje = diaIdx !== null ? Object.values(treinos)[diaIdx] : null;
-  const aguaMeta = usuario.genero === "M" ? 16 : 12;
+  const tHoje   = diaIdx !== null ? Object.values(treinos)[diaIdx] : null;
+  const aguaMeta= usuario.genero === "M" ? 16 : 12;
+  const kcalHoje= tHoje ? tHoje.kcal : 0;
 
   return (
-    <div style={S.tela}>
-      {/* HEADER */}
-      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"20px 0 16px",borderBottom:"1px solid #0d0d20",marginBottom:16}}>
-        <div style={{display:"flex",alignItems:"center",gap:12}}>
-          <div style={{position:"relative"}}>
-            <img src={usuario.foto} alt={usuario.nome} style={{width:54,height:54,borderRadius:"50%",objectFit:"cover",objectPosition:"top",border:`2.5px solid ${usuario.cor}`}}/>
-            <div style={{position:"absolute",bottom:1,right:1,width:13,height:13,borderRadius:"50%",background:usuario.cor,border:"2px solid #060612"}}/>
+    <div style={cs.screen}>
+      {/* ── HEADER ── */}
+      <div style={{
+        display:"flex", justifyContent:"space-between",
+        alignItems:"center", padding:`${sp.xl}px 0 ${sp.lg}px`,
+      }}>
+        <div style={{display:"flex",alignItems:"center",gap:sp.md}}>
+          <div style={{position:"relative",flexShrink:0}}>
+            <img src={usuario.foto} alt={usuario.nome}
+              style={{width:48,height:48,borderRadius:"50%",objectFit:"cover",objectPosition:"top",border:`2px solid ${usuario.cor}`,display:"block"}}/>
+            <div style={{position:"absolute",bottom:1,right:1,width:11,height:11,borderRadius:"50%",background:usuario.cor,border:`2px solid ${C.bg}`}}/>
           </div>
           <div>
-            <div style={{fontSize:12,color:"#888",letterSpacing:1}}>Bom treino,</div>
-            <div style={{fontFamily:"'Bebas Neue',cursive",fontSize:26,letterSpacing:2,color:usuario.cor,lineHeight:1.2}}>{usuario.nome.toUpperCase()}</div>
-            <div style={{fontSize:11,color:"#555",marginTop:1,textTransform:"capitalize"}}>{hoje()}</div>
+            <div style={{fontSize:11,color:C.textMuted,letterSpacing:.5}}>Olá,</div>
+            <div style={{fontFamily:font.display,fontSize:22,letterSpacing:2,color:usuario.cor,lineHeight:1.1}}>{usuario.nome.toUpperCase()}</div>
+            <div style={{fontSize:10,color:C.textMuted,marginTop:2,textTransform:"capitalize"}}>{hoje()}</div>
           </div>
         </div>
-        <div style={{display:"flex",gap:8,alignItems:"center"}}>
-          <div style={{display:"flex",alignItems:"center",gap:5,background:"#111120",border:`1px solid ${usuario.cor}44`,borderRadius:20,padding:"6px 12px"}}>
-            <span>🔥</span>
-            <span style={{color:usuario.cor,fontWeight:700,fontSize:15}}>{streak}</span>
+        <div style={{display:"flex",gap:sp.sm,alignItems:"center"}}>
+          <div style={{
+            display:"flex",alignItems:"center",gap:5,
+            background:C.surface, border:`1px solid ${C.border}`,
+            borderRadius:r.pill, padding:"5px 12px",
+          }}>
+            <span style={{fontSize:14}}>🔥</span>
+            <span style={{color:usuario.cor,fontWeight:700,fontSize:14}}>{streak}</span>
           </div>
-          <button onClick={onLogout} style={{width:36,height:36,borderRadius:"50%",background:"#111120",border:"1px solid #1e1e35",color:"#888",cursor:"pointer",fontSize:15,display:"flex",alignItems:"center",justifyContent:"center"}}>↩</button>
+          <button onClick={onLogout} style={{
+            width:34,height:34,borderRadius:"50%",
+            background:C.surface,border:`1px solid ${C.border}`,
+            color:C.textSub,cursor:"pointer",fontSize:14,
+            display:"flex",alignItems:"center",justifyContent:"center",
+          }}>↩</button>
         </div>
       </div>
 
-      {/* FRASE */}
-      <div style={{background:"#0d0d20",borderRadius:14,padding:"12px 16px",marginBottom:14,borderLeft:`3px solid ${usuario.cor}66`}}>
-        <div style={{fontSize:9,color:usuario.cor,letterSpacing:3,fontWeight:700,marginBottom:5}}>✦ MOTIVAÇÃO DO DIA</div>
-        <p style={{fontSize:13,color:"#ccc",lineHeight:1.7,fontStyle:"italic",margin:0}}>"{frase}"</p>
-      </div>
-
-      {/* STATS */}
-      <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:8,marginBottom:14}}>
-        {[
-          ["⚖️", med.peso+"kg", "Peso", usuario.cor],
-          [imcT.includes("Normal")?"✅":"⚠️", imcV, imcT, imcC],
-          ["🎯", usuario.pesoMeta+"kg", "Meta", "#4CAF50"],
-          ["📉", "-"+perdido+"kg", "Perdidos", "#66BB6A"],
-        ].map(([ic,v,l,c]) => (
-          <div key={l} style={{background:"#0d0d20",borderRadius:14,padding:"12px 6px",display:"flex",flexDirection:"column",alignItems:"center",gap:3,borderTop:`2px solid ${c}44`}}>
-            <span style={{fontSize:18}}>{ic}</span>
-            <span style={{fontSize:14,fontWeight:700,color:c,textAlign:"center",lineHeight:1.2}}>{v}</span>
-            <span style={{fontSize:9,color:"#666",textAlign:"center",letterSpacing:.5}}>{l}</span>
+      {/* ── PROGRESS HERO ── */}
+      <div style={{
+        ...cs.card,
+        background:`linear-gradient(135deg, ${usuario.cor}12 0%, ${C.surface} 60%)`,
+        border:`1px solid ${usuario.cor}28`,
+        padding:sp.xl,
+        marginBottom:sp.lg,
+      }}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-end",marginBottom:sp.md}}>
+          <div>
+            <Label color={usuario.cor}>META DE EMAGRECIMENTO</Label>
+            <div style={{fontFamily:font.display,fontSize:40,color:C.text,lineHeight:1,letterSpacing:1}}>
+              {prog.toFixed(0)}<span style={{fontSize:20}}>%</span>
+            </div>
           </div>
-        ))}
-      </div>
-
-      {/* PROGRESS */}
-      <div style={S.card}>
-        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}>
-          <span style={S.cardTit}>JORNADA ATÉ A META</span>
-          <span style={{color:usuario.cor,fontWeight:700,fontSize:18}}>{prog.toFixed(0)}%</span>
-        </div>
-        <div style={{background:"#1e1e35",borderRadius:20,height:10,overflow:"hidden",marginBottom:6}}>
-          <div style={{height:"100%",width:`${prog}%`,background:`linear-gradient(90deg,${usuario.cor},${usuario.corEscura})`,borderRadius:20,transition:"width .6s ease",boxShadow:`0 0 10px ${usuario.corGlow}`}}/>
-        </div>
-        <div style={{display:"flex",justifyContent:"space-between"}}>
-          <span style={{fontSize:11,color:"#888"}}>Início: {usuario.pesoInicial}kg</span>
-          <span style={{fontSize:11,color:"#4CAF50"}}>Faltam {falta}kg</span>
-        </div>
-      </div>
-
-      {/* TREINO DO DIA */}
-      {treinoHoje ? (
-        <div style={{...S.card,border:`1px solid ${usuario.cor}33`}}>
-          <div style={{fontSize:9,color:usuario.cor,letterSpacing:3,fontWeight:700,marginBottom:6}}>💪 TREINO DE HOJE · {DIAS[new Date().getDay()].toUpperCase()}</div>
-          <div style={{fontFamily:"'Bebas Neue',cursive",fontSize:26,letterSpacing:2,marginBottom:4}}>{treinoHoje.nome}</div>
-          <div style={{fontSize:12,color:"#888",marginBottom:12}}>{treinoHoje.foco}</div>
-          <div style={{display:"flex",gap:8,flexWrap:"wrap",marginBottom:14}}>
-            {[`⏱ ${treinoHoje.duracao}`,`🔥 ~${treinoHoje.kcal}kcal`,`📋 ${treinoHoje.exercicios.length} ex.`].map(t=>(
-              <span key={t} style={{fontSize:11,color:"#aaa",background:"#111120",padding:"4px 10px",borderRadius:20}}>{t}</span>
-            ))}
+          <div style={{textAlign:"right"}}>
+            <div style={{fontSize:11,color:C.textMuted}}>Perdidos</div>
+            <div style={{fontFamily:font.display,fontSize:28,color:C.success,lineHeight:1}}>-{perdido}kg</div>
+            <div style={{fontSize:11,color:C.textMuted,marginTop:2}}>Faltam {falta}kg</div>
           </div>
-          {treinoHoje.exercicios.slice(0,3).map((ex,i)=>(
-            <div key={i} style={{display:"flex",gap:8,alignItems:"center",padding:"5px 0",borderBottom:"1px solid #0d0d20"}}>
-              <span style={{color:usuario.cor,fontSize:10,fontWeight:700,minWidth:16}}>{i+1}.</span>
-              <span style={{flex:1,fontSize:13}}>{ex.nome}</span>
-              <span style={{fontSize:11,color:"#666"}}>{ex.series}×{ex.reps}</span>
+        </div>
+        <ProgressBar value={prog} color={`linear-gradient(90deg,${usuario.cor},${usuario.corEscura})`} height={8} glow/>
+        <div style={{display:"flex",justifyContent:"space-between",marginTop:sp.sm}}>
+          <span style={{fontSize:10,color:C.textMuted}}>Início {usuario.pesoInicial}kg</span>
+          <span style={{fontSize:10,color:C.textMuted}}>Meta {usuario.pesoMeta}kg</span>
+        </div>
+      </div>
+
+      {/* ── QUICK STATS ── */}
+      <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:sp.sm,marginBottom:sp.lg}}>
+        <Metric icon="⚖️" value={med.peso+"kg"} label="Peso atual" color={usuario.cor}/>
+        <Metric icon="📊" value={imcV} label="IMC" color={imcCor(imcV)}/>
+        <Metric icon="🔥" value={kcalHoje} label="kcal hoje" color="#F59E0B"/>
+      </div>
+
+      {/* ── MOTIVAÇÃO ── */}
+      <div style={{
+        ...cs.card,
+        borderLeft:`3px solid ${usuario.cor}55`,
+        padding:`${sp.md}px ${sp.lg}px`,
+        marginBottom:sp.lg,
+      }}>
+        <Label color={usuario.cor}>✦ MOTIVAÇÃO</Label>
+        <p style={{fontSize:13,color:C.textSub,lineHeight:1.7,fontStyle:"italic",margin:0}}>"{frase}"</p>
+      </div>
+
+      {/* ── TREINO HOJE ── */}
+      {tHoje ? (
+        <div style={{
+          ...cs.card,
+          border:`1px solid ${usuario.cor}30`,
+          background:`linear-gradient(160deg,${usuario.cor}0A,${C.surface})`,
+          padding:sp.xl,
+        }}>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:sp.md}}>
+            <div style={{flex:1}}>
+              <Label color={usuario.cor}>💪 TREINO DE HOJE · {DIAS[new Date().getDay()].toUpperCase()}</Label>
+              <div style={{fontFamily:font.display,fontSize:24,letterSpacing:2,lineHeight:1.1,marginBottom:4}}>{tHoje.nome}</div>
+              <div style={{fontSize:12,color:C.textSub}}>{tHoje.foco}</div>
+            </div>
+          </div>
+          <div style={{display:"flex",gap:sp.sm,marginBottom:sp.lg,flexWrap:"wrap"}}>
+            <Pill>⏱ {tHoje.duracao}</Pill>
+            <Pill>🔥 ~{tHoje.kcal}kcal</Pill>
+            <Pill>📋 {tHoje.exercicios.length} exercícios</Pill>
+          </div>
+          {tHoje.exercicios.slice(0,3).map((ex,i)=>(
+            <div key={i} style={{
+              display:"flex",alignItems:"center",gap:sp.sm,
+              padding:`${sp.sm}px 0`,
+              borderBottom: i<2 ? `1px solid ${C.border}` : "none",
+            }}>
+              <span style={{
+                width:20,height:20,borderRadius:"50%",
+                background:`${usuario.cor}22`,
+                display:"inline-flex",alignItems:"center",justifyContent:"center",
+                fontSize:10,fontWeight:700,color:usuario.cor,flexShrink:0,
+              }}>{i+1}</span>
+              <span style={{flex:1,fontSize:13,color:C.text}}>{ex.nome}</span>
+              <span style={{fontSize:11,color:C.textMuted}}>{ex.series}×{ex.reps}</span>
             </div>
           ))}
-          {treinoHoje.exercicios.length>3 && <div style={{fontSize:12,color:"#555",marginTop:4}}>+{treinoHoje.exercicios.length-3} exercícios</div>}
-          <button onClick={()=>setTab("treino")} style={{...S.btnPrimary,background:`linear-gradient(135deg,${usuario.cor},${usuario.corEscura})`,marginTop:14}}>
+          {tHoje.exercicios.length>3 && (
+            <div style={{fontSize:11,color:C.textMuted,marginTop:sp.sm}}>
+              +{tHoje.exercicios.length-3} exercícios
+            </div>
+          )}
+          <button onClick={()=>setTab("treino")} className="tap-scale"
+            style={{...cs.btn,background:`linear-gradient(135deg,${usuario.cor},${usuario.corEscura})`,marginTop:sp.lg,marginBottom:0}}>
             INICIAR TREINO →
           </button>
         </div>
       ) : (
-        <div style={{...S.card,textAlign:"center",padding:28}}>
-          <div style={{fontSize:52}}>🛌</div>
-          <div style={{fontFamily:"'Bebas Neue',cursive",fontSize:26,letterSpacing:3,marginTop:8}}>DIA DE DESCANSO</div>
-          <div style={{fontSize:13,color:"#888",marginTop:6}}>Recuperação é parte do processo. Descanse bem.</div>
+        <div style={{...cs.card,textAlign:"center",padding:sp.xxxl}}>
+          <div style={{fontSize:44,marginBottom:sp.md}}>🛌</div>
+          <div style={{fontFamily:font.display,fontSize:22,letterSpacing:3,marginBottom:sp.sm}}>DIA DE DESCANSO</div>
+          <div style={{fontSize:13,color:C.textSub,lineHeight:1.6}}>Recuperação é parte do treino. Seu corpo cresce agora.</div>
         </div>
       )}
 
-      {/* CHECK-IN */}
-      <button onClick={doCheckin}
-        style={{...S.btnPrimary,background:checkin?"linear-gradient(135deg,#4CAF50,#2E7D32)":`linear-gradient(135deg,${usuario.cor},${usuario.corEscura})`}}>
-        {checkin ? "✅ CHECK-IN FEITO! STREAK +1 🔥" : "📍 FAZER CHECK-IN DO DIA"}
+      {/* ── CHECK-IN ── */}
+      <button onClick={doCheckin} className="tap-scale"
+        style={{
+          ...cs.btn,
+          background: checkin
+            ? "linear-gradient(135deg,#16A34A,#14532D)"
+            : `linear-gradient(135deg,${usuario.cor},${usuario.corEscura})`,
+        }}>
+        {checkin ? "✅ CHECK-IN FEITO  ·  STREAK +1 🔥" : "📍 FAZER CHECK-IN DO DIA"}
       </button>
 
-      {/* ÁGUA */}
-      <div style={S.card}>
-        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}>
-          <span style={S.cardTit}>💧 HIDRATAÇÃO</span>
-          <span style={{color:"#00B0FF",fontWeight:700,fontSize:13}}>{agua}/{aguaMeta} copos · {(agua*.25).toFixed(1)}L</span>
+      {/* ── HIDRATAÇÃO ── */}
+      <div style={{...cs.card}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:sp.sm}}>
+          <Label>💧 ÁGUA DO DIA</Label>
+          <span style={{fontSize:12,color:"#38BDF8",fontWeight:600}}>{(agua*.25).toFixed(1)}L / {(aguaMeta*.25).toFixed(1)}L</span>
         </div>
-        <div style={{background:"#1e1e35",borderRadius:20,height:7,overflow:"hidden",marginBottom:10}}>
-          <div style={{height:"100%",width:`${Math.min(100,(agua/aguaMeta)*100)}%`,background:"linear-gradient(90deg,#00B0FF,#0055CC)",borderRadius:20,transition:"width .4s ease"}}/>
-        </div>
-        <div style={{display:"flex",gap:5,flexWrap:"wrap"}}>
+        <ProgressBar value={(agua/aguaMeta)*100} color="linear-gradient(90deg,#38BDF8,#0284C7)" height={5}/>
+        <div style={{display:"flex",gap:5,flexWrap:"wrap",marginTop:sp.md}}>
           {[...Array(aguaMeta)].map((_,i)=>(
-            <button key={i} onClick={()=>salvarAgua(i+1)}
-              style={{width:36,height:36,borderRadius:9,border:`1px solid ${i<agua?"#00B0FF":"#1e1e35"}`,background:i<agua?"#00B0FF22":"#111120",cursor:"pointer",fontSize:14,transition:"all .2s"}}>
-              💧
-            </button>
+            <button key={i} onClick={()=>salvarAgua(i+1)} className="tap-scale"
+              style={{
+                width:36,height:36,borderRadius:r.sm,
+                border:`1px solid ${i<agua?"#38BDF8":C.border}`,
+                background: i<agua ? "#38BDF822" : C.surfaceHigh,
+                cursor:"pointer",fontSize:13,
+                transition:"all .15s",
+              }}>💧</button>
           ))}
         </div>
       </div>
 
-      {/* MODO CASAL */}
-      <div style={{...S.card,border:`1px solid ${outroPerfil.cor}22`}}>
-        <div style={S.cardTit}>👫 MODO CASAL</div>
-        <div style={{display:"flex",alignItems:"center",gap:14,marginTop:10}}>
-          <img src={outroPerfil.foto} alt={outroPerfil.nome} style={{width:50,height:50,borderRadius:"50%",objectFit:"cover",objectPosition:"top",border:`2px solid ${outroPerfil.cor}`,flexShrink:0}}/>
+      {/* ── PARCEIRO ── */}
+      <div style={{...cs.card,border:`1px solid ${outroPerfil.cor}20`,marginBottom:sp.md}}>
+        <Label>👫 PARCEIRO(A)</Label>
+        <div style={{display:"flex",alignItems:"center",gap:sp.md,marginTop:sp.sm}}>
+          <img src={outroPerfil.foto} alt={outroPerfil.nome}
+            style={{width:46,height:46,borderRadius:"50%",objectFit:"cover",objectPosition:"top",border:`2px solid ${outroPerfil.cor}`,flexShrink:0}}/>
           <div style={{flex:1}}>
-            <div style={{color:outroPerfil.cor,fontWeight:700,fontSize:16,fontFamily:"'Bebas Neue',cursive",letterSpacing:2}}>{outroPerfil.nome.toUpperCase()}</div>
-            <div style={{fontSize:11,color:"#888",marginTop:2}}>{outroPerfil.objetivo}</div>
-            <div style={{display:"flex",justifyContent:"space-between",marginTop:6}}>
-              <span style={{fontSize:10,color:"#888"}}>Progresso</span>
-              <span style={{fontSize:10,color:outroPerfil.cor,fontWeight:700}}>{pct(outro.peso||outroPerfil.pesoInicial,outroPerfil.pesoInicial,outroPerfil.pesoMeta).toFixed(0)}%</span>
-            </div>
-            <div style={{background:"#1e1e35",borderRadius:20,height:5,overflow:"hidden",marginTop:4}}>
-              <div style={{height:"100%",width:`${pct(outro.peso||outroPerfil.pesoInicial,outroPerfil.pesoInicial,outroPerfil.pesoMeta)}%`,background:`linear-gradient(90deg,${outroPerfil.cor},${outroPerfil.corEscura})`,borderRadius:20}}/>
+            <div style={{fontFamily:font.display,fontSize:18,letterSpacing:2,color:outroPerfil.cor}}>{outroPerfil.nome.toUpperCase()}</div>
+            <div style={{fontSize:11,color:C.textSub,marginTop:2,marginBottom:sp.sm}}>{outroPerfil.objetivo}</div>
+            <ProgressBar value={pct(outro.peso||outroPerfil.pesoInicial,outroPerfil.pesoInicial,outroPerfil.pesoMeta)} color={`linear-gradient(90deg,${outroPerfil.cor},${outroPerfil.corEscura})`} height={4}/>
+            <div style={{fontSize:10,color:outroPerfil.cor,marginTop:3}}>
+              {pct(outro.peso||outroPerfil.pesoInicial,outroPerfil.pesoInicial,outroPerfil.pesoMeta).toFixed(0)}% da meta
             </div>
           </div>
         </div>
       </div>
 
-      {/* SEMANA */}
-      <div style={{...S.card,marginBottom:16}}>
-        <div style={S.cardTit}>📅 SEMANA DE TREINOS</div>
-        <div style={{display:"flex",gap:5,marginTop:10}}>
+      {/* ── SEMANA ── */}
+      <div style={{...cs.card,marginBottom:sp.xl}}>
+        <Label>📅 SEMANA</Label>
+        <div style={{display:"flex",gap:5,marginTop:sp.sm}}>
           {DIAS.map((d,i)=>{
-            const t=[false,true,true,true,true,false,true][i];
-            const hoje2 = new Date().getDay()===i;
+            const temT = [false,true,true,true,true,false,true][i];
+            const ehHoje = new Date().getDay()===i;
             return (
-              <div key={d} style={{flex:1,borderRadius:10,padding:"8px 0",display:"flex",flexDirection:"column",alignItems:"center",gap:4,background:hoje2?`${usuario.cor}18`:"#111120",border:`1px solid ${hoje2?usuario.cor:"#1e1e35"}`}}>
-                <span style={{fontSize:9,color:hoje2?usuario.cor:"#555",fontWeight:hoje2?700:400}}>{d}</span>
-                <span style={{fontSize:16}}>{t?"💪":"😴"}</span>
+              <div key={d} style={{
+                flex:1, borderRadius:r.md,
+                padding:"8px 0",
+                display:"flex",flexDirection:"column",alignItems:"center",gap:3,
+                background: ehHoje ? `${usuario.cor}18` : C.surfaceHigh,
+                border:`1px solid ${ehHoje?usuario.cor:C.border}`,
+              }}>
+                <span style={{fontSize:9,color:ehHoje?usuario.cor:C.textMuted,fontWeight:ehHoje?700:400}}>{d}</span>
+                <span style={{fontSize:15}}>{temT?"💪":"😴"}</span>
               </div>
             );
           })}
         </div>
       </div>
+      <Spacer h={80}/>
     </div>
   );
 }
@@ -644,73 +959,91 @@ function Treino({ usuario, treinos }) {
   const [feitos, setFeitos] = useState({});
   const ref = useRef(null);
 
-  useEffect(() => {
-    if (ativo && timer > 0) { ref.current = setTimeout(()=>setTimer(t=>t-1), 1000); }
-    else if (timer===0) setAtivo(false);
+  useEffect(()=>{
+    if (ativo && timer>0) { ref.current = setTimeout(()=>setTimer(t=>t-1),1000); }
+    else if (timer===0)   { setAtivo(false); }
     return ()=>clearTimeout(ref.current);
-  }, [ativo, timer]);
+  },[ativo,timer]);
 
   const startTimer = s => { setTimer(s); setAtivo(true); };
-  const toggleSet  = (ei, si) => {
-    const k = `${ei}-${si}`;
-    setFeitos(p => ({...p,[k]:!p[k]}));
-  };
+  const toggleSet  = (ei,si) => setFeitos(p=>({...p,[`${ei}-${si}`]:!p[`${ei}-${si}`]}));
 
-  // ── exercício individual ──
+  // ── EXERCISE VIEW ──
   if (vista==="ex" && sel) {
     const ex = sel.exercicios[exIdx];
     const total = sel.exercicios.length;
     const progEx = ((exIdx+1)/total)*100;
 
     return (
-      <div style={S.tela}>
-        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",paddingTop:16,marginBottom:10}}>
-          <button style={S.back} onClick={()=>setVista("det")}>← Voltar</button>
-          <span style={{fontSize:11,color:"#888"}}>{exIdx+1} / {total}</span>
-        </div>
-        {/* barra de progresso do treino */}
-        <div style={{background:"#1e1e35",borderRadius:20,height:5,overflow:"hidden",marginBottom:18}}>
-          <div style={{height:"100%",width:`${progEx}%`,background:`linear-gradient(90deg,${usuario.cor},${usuario.corEscura})`,transition:"width .4s ease",boxShadow:`0 0 8px ${usuario.corGlow}`}}/>
+      <div style={cs.screen}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",paddingTop:sp.xl,marginBottom:sp.md}}>
+          <button style={cs.btnGhost} onClick={()=>setVista("det")}>← Voltar</button>
+          <span style={{fontSize:11,color:C.textMuted}}>{exIdx+1} / {total}</span>
         </div>
 
-        {/* card do exercício */}
-        <div style={{...S.card,border:`1px solid ${usuario.cor}33`,padding:18}}>
-          <div style={{fontSize:10,color:usuario.cor,letterSpacing:3,fontWeight:700}}>{ex.musculo.toUpperCase()}</div>
-          <div style={{fontFamily:"'Bebas Neue',cursive",fontSize:30,letterSpacing:2,margin:"6px 0 4px"}}>{ex.nome}</div>
-          {/* meta grid */}
-          <div style={{display:"flex",background:"#0a0a1a",borderRadius:12,overflow:"hidden",margin:"12px 0"}}>
-            {[["Séries",ex.series],["Reps",ex.reps],["Desc",ex.descanso+"s"],["~Kcal",ex.kcal*ex.series]].map(([l,v],i,arr)=>(
-              <div key={l} style={{flex:1,padding:"12px 0",display:"flex",flexDirection:"column",alignItems:"center",borderRight:i<arr.length-1?"1px solid #1e1e35":"none"}}>
-                <span style={{fontSize:10,color:"#888",marginBottom:3}}>{l}</span>
-                <span style={{fontSize:20,fontWeight:700,color:usuario.cor}}>{v}</span>
-              </div>
-            ))}
-          </div>
-          {/* vídeo */}
-          <VideoCard vid={ex.vid} nome={ex.nome} cor={usuario.cor} corGlow={usuario.corGlow}/>
-          {/* dicas */}
-          {[
-            {bg:"#0a1a0a",borda:"#4CAF5040",tit:"⚡ EXECUÇÃO",titC:"#4CAF50",txt:ex.exec},
-            {bg:"#1a0a0a",borda:"#F4433640",tit:"⚠️ ERROS COMUNS",titC:"#F44336",txt:ex.erro},
-            {bg:"#0a0a1a",borda:"#2196F340",tit:"🫁 RESPIRAÇÃO",titC:"#2196F3",txt:ex.resp},
-          ].map(d=>(
-            <div key={d.tit} style={{background:d.bg,borderRadius:10,padding:12,marginBottom:8,border:`1px solid ${d.borda}`}}>
-              <div style={{fontSize:10,color:d.titC,fontWeight:700,letterSpacing:1,marginBottom:4}}>{d.tit}</div>
-              <p style={{fontSize:13,color:"#bbb",margin:0,lineHeight:1.6}}>{d.txt}</p>
+        {/* workout progress */}
+        <div style={{marginBottom:sp.xl}}>
+          <ProgressBar value={progEx} color={`linear-gradient(90deg,${usuario.cor},${usuario.corEscura})`} height={4} glow/>
+        </div>
+
+        {/* exercise header */}
+        <div style={{marginBottom:sp.lg}}>
+          <Pill color={usuario.cor} bg={`${usuario.cor}18`}>{ex.musculo}</Pill>
+          <div style={{fontFamily:font.display,fontSize:32,letterSpacing:2,marginTop:sp.sm,marginBottom:2}}>{ex.nome}</div>
+        </div>
+
+        {/* metrics */}
+        <div style={{
+          display:"grid",gridTemplateColumns:"repeat(4,1fr)",
+          gap:sp.sm,marginBottom:sp.lg,
+        }}>
+          {[["Séries",ex.series],["Reps",ex.reps],["Descanso",ex.descanso+"s"],["Kcal","~"+(ex.kcal*ex.series)]].map(([l,v])=>(
+            <div key={l} style={{...cs.metricBox,background:C.surfaceHigh,borderRadius:r.md}}>
+              <span style={{fontFamily:font.display,fontSize:22,color:usuario.cor,lineHeight:1}}>{v}</span>
+              <span style={{fontSize:9,color:C.textMuted,letterSpacing:.5,textTransform:"uppercase"}}>{l}</span>
             </div>
           ))}
         </div>
 
-        {/* marcador de séries */}
-        <div style={S.card}>
-          <div style={{fontSize:10,color:"#888",letterSpacing:2,marginBottom:10}}>MARQUE AS SÉRIES</div>
-          <div style={{display:"flex",gap:8}}>
+        {/* video */}
+        <VideoCard vid={ex.vid} nome={ex.nome} cor={usuario.cor} corGlow={usuario.corGlow}/>
+
+        {/* info cards */}
+        <div style={{display:"flex",flexDirection:"column",gap:sp.sm,marginBottom:sp.lg}}>
+          {[
+            {ic:"⚡",label:"EXECUÇÃO CORRETA",color:C.success,txt:ex.exec,bg:`${C.success}0A`},
+            {ic:"⚠️",label:"ERROS COMUNS",   color:C.danger, txt:ex.erro, bg:`${C.danger}0A`},
+            {ic:"🫁",label:"RESPIRAÇÃO",       color:C.info,   txt:ex.resp, bg:`${C.info}0A`},
+          ].map(d=>(
+            <div key={d.label} style={{
+              background:d.bg,borderRadius:r.lg,
+              padding:sp.md,
+              border:`1px solid ${d.color}22`,
+            }}>
+              <div style={{...cs.label,color:d.color,marginBottom:sp.xs}}>{d.ic} {d.label}</div>
+              <p style={{fontSize:13,color:C.textSub,margin:0,lineHeight:1.65}}>{d.txt}</p>
+            </div>
+          ))}
+        </div>
+
+        {/* sets tracker */}
+        <div style={{...cs.card,marginBottom:sp.md}}>
+          <Label>MARQUE CADA SÉRIE</Label>
+          <div style={{display:"flex",gap:sp.sm,marginTop:sp.sm}}>
             {[...Array(ex.series)].map((_,si)=>{
               const k=`${exIdx}-${si}`;
               const done=feitos[k];
               return (
-                <button key={si}
-                  style={{flex:1,padding:"14px 0",borderRadius:12,border:`2px solid ${done?usuario.cor:"#1e1e35"}`,background:done?`linear-gradient(135deg,${usuario.cor},${usuario.corEscura})`:"#111120",cursor:"pointer",fontSize:18,fontWeight:700,color:"#fff",transition:"all .2s"}}
+                <button key={si} className="tap-scale"
+                  style={{
+                    flex:1,padding:"16px 0",
+                    borderRadius:r.md,
+                    border:`1.5px solid ${done?usuario.cor:C.border}`,
+                    background: done ? `linear-gradient(135deg,${usuario.cor},${usuario.corEscura})` : C.surfaceHigh,
+                    cursor:"pointer",fontSize:17,fontWeight:700,
+                    color:done?"#fff":C.textSub,
+                    transition:"all .15s",
+                  }}
                   onClick={()=>{ toggleSet(exIdx,si); if(!done) startTimer(ex.descanso); }}>
                   {done?"✓":si+1}
                 </button>
@@ -719,34 +1052,52 @@ function Treino({ usuario, treinos }) {
           </div>
         </div>
 
-        {/* timer de descanso */}
+        {/* rest timer */}
         {timer > 0 && (
-          <div style={{...S.card,textAlign:"center",padding:24,border:`2px solid ${timer<=10?"#F44336":usuario.cor}`,transition:"border-color .3s"}}>
-            <div style={{fontSize:10,color:"#888",letterSpacing:3,marginBottom:6}}>⏱ DESCANSO</div>
-            <div style={{fontFamily:"'Bebas Neue',cursive",fontSize:72,color:timer<=10?"#F44336":usuario.cor,lineHeight:1,transition:"color .3s",textShadow:`0 0 20px ${timer<=10?"#F4433680":usuario.corGlow}`}}>
-              {timer}<span style={{fontSize:24}}>s</span>
+          <div style={{
+            ...cs.card,
+            textAlign:"center",padding:sp.xl,
+            border:`1.5px solid ${timer<=10?C.danger:usuario.cor}44`,
+            background: timer<=10 ? `${C.danger}08` : `${usuario.cor}08`,
+            transition:"all .3s",
+            marginBottom:sp.md,
+          }}>
+            <Label color={timer<=10?C.danger:usuario.cor}>⏱ DESCANSO</Label>
+            <div style={{
+              fontFamily:font.display,fontSize:68,
+              color:timer<=10?C.danger:usuario.cor,
+              lineHeight:1,
+              textShadow:`0 0 24px ${timer<=10?C.danger+"60":usuario.corGlow}`,
+            }}>
+              {timer}<span style={{fontSize:22,opacity:.7}}>s</span>
             </div>
-            <div style={{background:"#1e1e35",borderRadius:20,height:6,overflow:"hidden",margin:"12px 0"}}>
-              <div style={{height:"100%",background:`linear-gradient(90deg,${usuario.cor},${usuario.corEscura})`,transition:"width .9s linear",width:`${(timer/ex.descanso)*100}%`}}/>
+            <div style={{margin:`${sp.md}px 0`}}>
+              <ProgressBar value={(timer/ex.descanso)*100} color={timer<=10?C.danger:usuario.cor} height={4}/>
             </div>
-            <button onClick={()=>{setAtivo(false);setTimer(0);}}
-              style={{background:usuario.cor,border:"none",padding:"8px 28px",borderRadius:20,color:"#000",fontWeight:700,cursor:"pointer",fontSize:13,letterSpacing:1}}>
-              PULAR
-            </button>
+            <button className="tap-scale" onClick={()=>{setAtivo(false);setTimer(0);}}
+              style={{
+                background:usuario.cor,border:"none",
+                padding:"8px 24px",borderRadius:r.pill,
+                color:"#000",fontWeight:700,cursor:"pointer",
+                fontSize:12,letterSpacing:1,
+              }}>PULAR</button>
           </div>
         )}
 
-        {/* navegação */}
-        <div style={{display:"flex",gap:10,marginBottom:80}}>
+        {/* navigation */}
+        <div style={{display:"flex",gap:sp.sm,marginBottom:80}}>
           {exIdx>0 && (
-            <button style={{flex:1,background:"#111120",border:"1px solid #1e1e35",color:"#888",padding:"14px 0",borderRadius:12,cursor:"pointer",fontWeight:700}}
+            <button className="tap-scale"
+              style={{flex:1,background:C.surface,border:`1px solid ${C.border}`,color:C.textSub,padding:"15px 0",borderRadius:r.md,cursor:"pointer",fontWeight:600,fontSize:13,fontFamily:font.body}}
               onClick={()=>{ setExIdx(i=>i-1); setTimer(0); setAtivo(false); }}>← Anterior</button>
           )}
-          {exIdx < total-1 ? (
-            <button style={{flex:2,...S.btnPrimary,background:`linear-gradient(135deg,${usuario.cor},${usuario.corEscura})`}}
+          {exIdx<total-1 ? (
+            <button className="tap-scale"
+              style={{...cs.btn,flex:2,background:`linear-gradient(135deg,${usuario.cor},${usuario.corEscura})`,marginBottom:0}}
               onClick={()=>{ setExIdx(i=>i+1); startTimer(ex.descanso); }}>Próximo →</button>
           ) : (
-            <button style={{flex:2,...S.btnPrimary,background:"linear-gradient(135deg,#4CAF50,#1B5E20)"}}
+            <button className="tap-scale"
+              style={{...cs.btn,flex:2,background:"linear-gradient(135deg,#16A34A,#14532D)",marginBottom:0}}
               onClick={()=>{ setVista("lista"); setSel(null); setFeitos({}); setExIdx(0); }}>
               🎉 TREINO CONCLUÍDO!
             </button>
@@ -756,137 +1107,216 @@ function Treino({ usuario, treinos }) {
     );
   }
 
-  // ── detalhe do treino ──
+  // ── DETAIL VIEW ──
   if (vista==="det" && sel) {
     const totalKcal = sel.exercicios.reduce((a,e)=>a+e.kcal*e.series,0);
     return (
-      <div style={S.tela}>
-        <button style={{...S.back,paddingTop:16}} onClick={()=>setVista("lista")}>← Treinos</button>
-        <div style={{borderBottom:`2px solid ${usuario.cor}33`,paddingBottom:16,marginBottom:16}}>
-          <div style={{fontSize:10,color:usuario.cor,letterSpacing:3}}>{sel.dia.toUpperCase()}</div>
-          <div style={{fontFamily:"'Bebas Neue',cursive",fontSize:32,letterSpacing:2,marginTop:4}}>{sel.nome}</div>
-          <div style={{fontSize:13,color:"#888",marginTop:4,marginBottom:10}}>{sel.foco}</div>
-          <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
-            {[`⏱ ${sel.duracao}`,`🔥 ~${totalKcal}kcal`,`💪 ${sel.exercicios.length} ex.`].map(t=>(
-              <span key={t} style={{fontSize:11,color:"#aaa",background:"#111120",padding:"4px 10px",borderRadius:20}}>{t}</span>
-            ))}
+      <div style={cs.screen}>
+        <div style={{paddingTop:sp.xl,paddingBottom:sp.md}}>
+          <button style={cs.btnGhost} onClick={()=>setVista("lista")}>← Treinos</button>
+        </div>
+
+        {/* workout hero */}
+        <div style={{
+          background:`linear-gradient(135deg,${usuario.cor}12,${C.surface})`,
+          borderRadius:r.xl,padding:sp.xl,
+          marginBottom:sp.lg,
+          border:`1px solid ${usuario.cor}28`,
+        }}>
+          <Pill color={usuario.cor} bg={`${usuario.cor}18`}>{sel.dia}</Pill>
+          <div style={{fontFamily:font.display,fontSize:28,letterSpacing:2,marginTop:sp.sm,marginBottom:4}}>{sel.nome}</div>
+          <div style={{fontSize:13,color:C.textSub,marginBottom:sp.md}}>{sel.foco}</div>
+          <div style={{display:"flex",gap:sp.sm,flexWrap:"wrap"}}>
+            <Pill>⏱ {sel.duracao}</Pill>
+            <Pill>🔥 ~{totalKcal}kcal</Pill>
+            <Pill>💪 {sel.exercicios.length} ex.</Pill>
           </div>
         </div>
-        <div style={{background:"#0a1a0a",borderRadius:12,padding:12,marginBottom:12,border:"1px solid #4CAF5022"}}>
-          <div style={{fontSize:10,color:"#4CAF50",fontWeight:700,letterSpacing:1,marginBottom:4}}>🔆 AQUECIMENTO</div>
-          <div style={{fontSize:13,color:"#bbb"}}>{sel.aquecimento}</div>
+
+        {/* warmup */}
+        <div style={{
+          background:`${C.success}0A`,borderRadius:r.lg,
+          padding:sp.md,marginBottom:sp.sm,
+          border:`1px solid ${C.success}22`,
+        }}>
+          <Label color={C.success}>🔆 AQUECIMENTO</Label>
+          <div style={{fontSize:13,color:C.textSub,lineHeight:1.6}}>{sel.aquecimento}</div>
         </div>
+
+        {/* exercise list */}
         {sel.exercicios.map((ex,i)=>(
-          <div key={i} onClick={()=>{ setExIdx(i); setVista("ex"); }}
-            style={{...S.card,cursor:"pointer",display:"flex",alignItems:"center",gap:12,borderLeft:`3px solid ${usuario.cor}`}}>
-            <div style={{width:32,height:32,borderRadius:"50%",background:`${usuario.cor}22`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:13,fontWeight:700,color:usuario.cor,flexShrink:0}}>{i+1}</div>
+          <div key={i} className="tap-scale"
+            onClick={()=>{ setExIdx(i); setVista("ex"); }}
+            style={{
+              ...cs.card,cursor:"pointer",
+              display:"flex",alignItems:"center",gap:sp.md,
+              borderLeft:`3px solid ${usuario.cor}66`,
+              marginBottom:sp.sm,
+              transition:"border-color .15s",
+            }}>
+            <div style={{
+              width:30,height:30,borderRadius:"50%",
+              background:`${usuario.cor}18`,flexShrink:0,
+              display:"flex",alignItems:"center",justifyContent:"center",
+              fontSize:12,fontWeight:700,color:usuario.cor,
+            }}>{i+1}</div>
             <div style={{flex:1}}>
-              <div style={{fontSize:15,fontWeight:700}}>{ex.nome}</div>
-              <div style={{fontSize:12,color:"#888",marginTop:2}}>{ex.series} séries × {ex.reps} · {ex.descanso}s desc.</div>
-              <div style={{fontSize:11,color:usuario.cor,marginTop:2}}>{ex.musculo}</div>
+              <div style={{fontSize:14,fontWeight:600,marginBottom:2}}>{ex.nome}</div>
+              <div style={{fontSize:11,color:C.textMuted}}>{ex.series}×{ex.reps} · {ex.descanso}s descanso</div>
+              <Pill color={usuario.cor} bg={`${usuario.cor}15`}>{ex.musculo}</Pill>
             </div>
             <div style={{textAlign:"right",flexShrink:0}}>
-              <div style={{fontSize:12,color:"#666"}}>{ex.kcal*ex.series}kcal</div>
-              <span style={{color:"#333",fontSize:20}}>›</span>
+              <div style={{fontSize:11,color:C.textMuted}}>{ex.kcal*ex.series}kcal</div>
+              <span style={{color:C.textMuted,fontSize:18}}>›</span>
             </div>
           </div>
         ))}
-        <div style={{background:"#080820",borderRadius:12,padding:12,marginBottom:12,border:"1px solid #2196F322"}}>
-          <div style={{fontSize:10,color:"#2196F3",fontWeight:700,letterSpacing:1,marginBottom:4}}>🌙 DESAQUECIMENTO</div>
-          <div style={{fontSize:13,color:"#bbb"}}>{sel.desaquecimento}</div>
+
+        {/* cooldown */}
+        <div style={{
+          background:`${C.info}0A`,borderRadius:r.lg,
+          padding:sp.md,marginBottom:sp.lg,
+          border:`1px solid ${C.info}22`,
+        }}>
+          <Label color={C.info}>🌙 DESAQUECIMENTO</Label>
+          <div style={{fontSize:13,color:C.textSub,lineHeight:1.6}}>{sel.desaquecimento}</div>
         </div>
-        <button onClick={()=>{ setExIdx(0); setVista("ex"); }}
-          style={{...S.btnPrimary,background:`linear-gradient(135deg,${usuario.cor},${usuario.corEscura})`,marginBottom:80}}>
+
+        <button className="tap-scale"
+          style={{...cs.btn,background:`linear-gradient(135deg,${usuario.cor},${usuario.corEscura})`,marginBottom:80}}
+          onClick={()=>{ setExIdx(0); setVista("ex"); }}>
           ▶ INICIAR TREINO
         </button>
       </div>
     );
   }
 
-  // ── lista de treinos ──
+  // ── LIST VIEW ──
   return (
-    <div style={S.tela}>
-      <div style={{paddingTop:20,marginBottom:4}}>
-        <div style={{fontFamily:"'Bebas Neue',cursive",fontSize:36,letterSpacing:4}}>TREINOS</div>
-        <div style={{fontSize:12,color:"#666",letterSpacing:1,marginBottom:20}}>{usuario.nome} · {usuario.objetivo}</div>
+    <div style={cs.screen}>
+      <div style={cs.pageHead}>
+        <div style={{fontFamily:font.display,fontSize:34,letterSpacing:4,marginBottom:2}}>TREINOS</div>
+        <div style={{fontSize:12,color:C.textMuted}}>{usuario.nome} · {usuario.objetivo}</div>
       </div>
-      <div style={{background:`${usuario.cor}0d`,borderRadius:14,padding:14,marginBottom:18,border:`1px solid ${usuario.cor}22`}}>
-        <div style={{fontSize:10,color:usuario.cor,letterSpacing:2,fontWeight:700,marginBottom:8}}>📋 DIVISÃO SEMANAL</div>
-        <div style={{fontSize:12,color:"#bbb",lineHeight:2}}>
-          {Object.values(treinos).map(t=>`${t.dia}: ${t.nome}`).join(" · ")}
+
+      {/* divisão semanal resumida */}
+      <div style={{
+        ...cs.card,
+        background:`${usuario.cor}0A`,
+        border:`1px solid ${usuario.cor}22`,
+        marginBottom:sp.lg,
+      }}>
+        <Label color={usuario.cor}>📋 DIVISÃO SEMANAL</Label>
+        <div style={{display:"flex",flexDirection:"column",gap:sp.xs,marginTop:sp.xs}}>
+          {Object.values(treinos).map(t=>(
+            <div key={t.dia} style={{display:"flex",gap:sp.sm,alignItems:"center"}}>
+              <span style={{fontSize:10,color:C.textMuted,minWidth:28,fontWeight:600}}>{t.dia.slice(0,3)}</span>
+              <span style={{fontSize:12,color:C.text}}>{t.nome}</span>
+            </div>
+          ))}
         </div>
       </div>
+
+      {/* workout cards */}
       {Object.values(treinos).map(t=>{
-        const kcal=t.exercicios.reduce((a,e)=>a+e.kcal*e.series,0);
+        const kcal = t.exercicios.reduce((a,e)=>a+e.kcal*e.series,0);
         return (
-          <div key={t.dia} onClick={()=>{ setSel(t); setVista("det"); }}
-            style={{...S.card,cursor:"pointer",display:"flex",alignItems:"center",gap:14,border:`1px solid ${usuario.cor}18`}}>
-            <div style={{width:52,height:52,borderRadius:14,background:`${usuario.cor}18`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
-              <div style={{textAlign:"center"}}>
-                <div style={{fontFamily:"'Bebas Neue',cursive",fontSize:11,color:usuario.cor,letterSpacing:1}}>{t.dia.slice(0,3).toUpperCase()}</div>
-                <div style={{fontSize:20}}>💪</div>
-              </div>
+          <div key={t.dia} className="tap-scale"
+            onClick={()=>{ setSel(t); setVista("det"); }}
+            style={{
+              ...cs.card,cursor:"pointer",
+              display:"flex",alignItems:"center",gap:sp.md,
+              marginBottom:sp.sm,
+            }}>
+            <div style={{
+              width:50,height:50,borderRadius:r.lg,
+              background:`${usuario.cor}18`,flexShrink:0,
+              display:"flex",flexDirection:"column",
+              alignItems:"center",justifyContent:"center",
+              gap:1,
+            }}>
+              <div style={{fontFamily:font.display,fontSize:10,color:usuario.cor,letterSpacing:1}}>{t.dia.slice(0,3).toUpperCase()}</div>
+              <span style={{fontSize:18}}>💪</span>
             </div>
             <div style={{flex:1}}>
-              <div style={{fontSize:16,fontWeight:700}}>{t.nome}</div>
-              <div style={{fontSize:12,color:"#888",marginTop:2}}>{t.foco}</div>
-              <div style={{fontSize:11,color:"#666",marginTop:4}}>⏱ {t.duracao} · 🔥 ~{kcal}kcal · 💪 {t.exercicios.length} ex.</div>
+              <div style={{fontSize:15,fontWeight:600,marginBottom:3}}>{t.nome}</div>
+              <div style={{fontSize:12,color:C.textMuted,marginBottom:sp.xs}}>{t.foco}</div>
+              <div style={{display:"flex",gap:sp.sm}}>
+                <Pill>⏱ {t.duracao}</Pill>
+                <Pill>🔥 ~{kcal}kcal</Pill>
+              </div>
             </div>
-            <span style={{color:usuario.cor,fontSize:24}}>›</span>
+            <span style={{color:C.textMuted,fontSize:20}}>›</span>
           </div>
         );
       })}
+      <Spacer h={80}/>
     </div>
   );
 }
 
 // ════════════════════════════════════════════════════════════════════
-// VIDEO CARD — thumbnail clicável → abre YouTube
+// VIDEO CARD
 // ════════════════════════════════════════════════════════════════════
 function VideoCard({ vid, nome, cor, corGlow }) {
   const [clicado, setClicado] = useState(false);
-  const [imgOk, setImgOk] = useState(true);
   const url = `https://www.youtube.com/watch?v=${vid}`;
-  const thumb = `https://img.youtube.com/vi/${vid}/hqdefault.jpg`;
   const thumbMax = `https://img.youtube.com/vi/${vid}/maxresdefault.jpg`;
+  const thumbFallback = `https://img.youtube.com/vi/${vid}/hqdefault.jpg`;
 
   return (
-    <div style={{borderRadius:14,overflow:"hidden",marginBottom:14,background:"#0a0a1a",minHeight:180,position:"relative"}}>
+    <div style={{borderRadius:r.lg,overflow:"hidden",marginBottom:sp.lg,background:C.surfaceHigh,minHeight:180}}>
       {!clicado ? (
-        <div style={{position:"relative",cursor:"pointer",width:"100%",minHeight:180}} onClick={()=>setClicado(true)}>
-          {imgOk ? (
-            <img src={thumbMax} alt={nome}
-              onError={e=>{ e.target.src=thumb; }}
-              style={{width:"100%",height:180,objectFit:"cover",display:"block"}}/>
-          ) : (
-            <div style={{width:"100%",height:180,background:`linear-gradient(135deg,${cor}22,#0a0a1a)`,display:"flex",alignItems:"center",justifyContent:"center"}}>
-              <span style={{fontSize:48}}>🎬</span>
+        <div style={{position:"relative",cursor:"pointer",minHeight:180}} onClick={()=>setClicado(true)}>
+          <img src={thumbMax} alt={nome}
+            onError={e=>{ e.target.src=thumbFallback; }}
+            style={{width:"100%",height:180,objectFit:"cover",display:"block"}}/>
+          <div style={{
+            position:"absolute",inset:0,
+            background:"linear-gradient(to top,rgba(0,0,0,.7),rgba(0,0,0,.1))",
+            display:"flex",flexDirection:"column",
+            alignItems:"center",justifyContent:"center",gap:sp.sm,
+          }}>
+            <div style={{
+              width:64,height:64,borderRadius:"50%",
+              background:`linear-gradient(135deg,${cor},${cor}88)`,
+              display:"flex",alignItems:"center",justifyContent:"center",
+              boxShadow:`0 0 28px ${corGlow}`,
+              animation:"pulseGlow 2s ease-in-out infinite",
+            }}>
+              <span style={{fontSize:28,marginLeft:5}}>▶</span>
             </div>
-          )}
-          {/* overlay */}
-          <div style={{position:"absolute",inset:0,background:"linear-gradient(to top,#000000cc,#00000033)",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:10}}>
-            <div style={{width:72,height:72,borderRadius:"50%",background:`linear-gradient(135deg,${cor},${cor}88)`,display:"flex",alignItems:"center",justifyContent:"center",boxShadow:`0 0 30px ${corGlow}`,animation:"pulse 2s ease-in-out infinite"}}>
-              <span style={{fontSize:32,marginLeft:6}}>▶</span>
-            </div>
-            <span style={{color:"#fff",fontSize:12,fontWeight:700,letterSpacing:2,textShadow:"0 2px 8px #000"}}>VER DEMONSTRAÇÃO</span>
+            <span style={{color:"#fff",fontSize:11,fontWeight:700,letterSpacing:2}}>VER DEMONSTRAÇÃO</span>
           </div>
-          {/* badge youtube */}
-          <div style={{position:"absolute",top:10,right:10,background:"#FF0000",borderRadius:6,padding:"3px 8px",fontSize:10,fontWeight:700,color:"#fff",display:"flex",alignItems:"center",gap:4}}>
-            ▶ YouTube
-          </div>
+          <div style={{
+            position:"absolute",top:10,right:10,
+            background:"#FF0000",borderRadius:r.sm,
+            padding:"2px 7px",fontSize:10,fontWeight:700,color:"#fff",
+          }}>▶ YouTube</div>
         </div>
       ) : (
-        <div style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",minHeight:180,gap:14,padding:20,background:`linear-gradient(135deg,${cor}11,#0a0a1a)`}}>
-          <div style={{fontSize:42}}>🎬</div>
-          <p style={{color:"#bbb",fontSize:13,textAlign:"center",lineHeight:1.6,margin:0}}>
-            Clique abaixo para ver a demonstração completa no YouTube
+        <div style={{
+          display:"flex",flexDirection:"column",
+          alignItems:"center",justifyContent:"center",
+          minHeight:180,gap:sp.lg,padding:sp.xl,
+          background:`linear-gradient(135deg,${cor}0D,${C.surfaceHigh})`,
+        }}>
+          <p style={{color:C.textSub,fontSize:13,textAlign:"center",lineHeight:1.6,margin:0}}>
+            Toque abaixo para ver a demonstração no YouTube
           </p>
           <a href={url} target="_blank" rel="noopener noreferrer"
-            style={{display:"flex",alignItems:"center",gap:10,padding:"14px 28px",borderRadius:25,background:"linear-gradient(135deg,#FF0000,#CC0000)",color:"#fff",fontWeight:700,fontSize:13,letterSpacing:1,textDecoration:"none",boxShadow:"0 4px 20px #FF000055"}}>
-            <span style={{fontSize:18}}>▶</span> Abrir no YouTube
+            style={{
+              display:"flex",alignItems:"center",gap:sp.sm,
+              padding:"13px 28px",borderRadius:r.pill,
+              background:"linear-gradient(135deg,#EF4444,#991B1B)",
+              color:"#fff",fontWeight:700,fontSize:13,
+              letterSpacing:1,textDecoration:"none",
+              boxShadow:"0 4px 18px #EF444455",
+            }}>
+            <span>▶</span> Abrir no YouTube
           </a>
           <button onClick={()=>setClicado(false)}
-            style={{background:"none",border:"1px solid #1e1e35",borderRadius:8,color:"#666",fontSize:12,cursor:"pointer",padding:"6px 16px"}}>
+            style={{background:"none",border:`1px solid ${C.border}`,borderRadius:r.sm,color:C.textMuted,fontSize:12,cursor:"pointer",padding:"6px 16px",fontFamily:font.body}}>
             ← Fechar
           </button>
         </div>
@@ -899,20 +1329,20 @@ function VideoCard({ vid, nome, cor, corGlow }) {
 // CARDIO
 // ════════════════════════════════════════════════════════════════════
 function Cardio({ usuario, med }) {
-  const [tipo,      setTipo]      = useState("caminhada");
-  const [minutos,   setMinutos]   = useState(30);
-  const [intensidade, setIntens]  = useState("moderado");
-  const [sessoes,   setSessoes]   = useState(() => DB.get("cardio_"+usuario.id, [
-    { tipo:"Caminhada", min:25, kcal:155, data:"Ontem", intensidade:"Moderado" },
+  const [tipo,      setTipo]    = useState("caminhada");
+  const [minutos,   setMinutos] = useState(30);
+  const [intensidade,setIntens] = useState("moderado");
+  const [sessoes,   setSessoes] = useState(() => DB.get("cardio_"+usuario.id, [
+    { tipo:"Caminhada", min:25, kcal:155, data:"Ontem",  intensidade:"Moderado" },
     { tipo:"Bicicleta", min:30, kcal:190, data:"3 dias", intensidade:"Moderado" },
   ]));
 
   const MET = {
-    caminhada:{ leve:3.5, moderado:4.5, intenso:6.0 },
-    esteira:  { leve:5.0, moderado:7.5, intenso:9.5 },
-    bicicleta:{ leve:4.0, moderado:6.0, intenso:8.5 },
-    escada:   { leve:6.0, moderado:8.5, intenso:11.0 },
-    eliptico: { leve:4.5, moderado:6.5, intenso:8.5 },
+    caminhada:{ leve:3.5,moderado:4.5,intenso:6.0 },
+    esteira:  { leve:5.0,moderado:7.5,intenso:9.5 },
+    bicicleta:{ leve:4.0,moderado:6.0,intenso:8.5 },
+    escada:   { leve:6.0,moderado:8.5,intenso:11.0 },
+    eliptico: { leve:4.5,moderado:6.5,intenso:8.5 },
   };
 
   const met  = MET[tipo]?.[intensidade] || 5;
@@ -928,7 +1358,7 @@ function Cardio({ usuario, med }) {
 
   const salvar = () => {
     const nova = { tipo:TIPOS.find(t=>t.id===tipo)?.lb, min:minutos, kcal, data:"Hoje", intensidade:intensidade[0].toUpperCase()+intensidade.slice(1) };
-    const novas = [nova, ...sessoes.slice(0,19)];
+    const novas = [nova,...sessoes.slice(0,19)];
     setSessoes(novas);
     DB.set("cardio_"+usuario.id, novas);
   };
@@ -937,42 +1367,57 @@ function Cardio({ usuario, med }) {
   const totalMin  = sessoes.reduce((a,s)=>a+s.min,0);
 
   return (
-    <div style={S.tela}>
-      <div style={{paddingTop:20,marginBottom:20}}>
-        <div style={{fontFamily:"'Bebas Neue',cursive",fontSize:36,letterSpacing:4}}>CARDIO</div>
-        <div style={{fontSize:12,color:"#666",letterSpacing:1}}>Condicionamento aeróbico</div>
+    <div style={cs.screen}>
+      <div style={cs.pageHead}>
+        <div style={{fontFamily:font.display,fontSize:34,letterSpacing:4,marginBottom:2}}>CARDIO</div>
+        <div style={{fontSize:12,color:C.textMuted}}>Condicionamento aeróbico</div>
       </div>
 
-      {/* tipo */}
-      <div style={{display:"flex",gap:8,marginBottom:18,overflowX:"auto",paddingBottom:4}}>
+      {/* type picker */}
+      <div style={{display:"flex",gap:sp.sm,marginBottom:sp.lg,overflowX:"auto",paddingBottom:4}}>
         {TIPOS.map(t=>(
-          <button key={t.id} onClick={()=>setTipo(t.id)}
-            style={{flexShrink:0,background:tipo===t.id?`${usuario.cor}1a`:"#111120",border:`1px solid ${tipo===t.id?usuario.cor:"#1e1e35"}`,borderRadius:14,padding:"10px 14px",cursor:"pointer",display:"flex",flexDirection:"column",alignItems:"center",gap:4,minWidth:72,transition:"all .2s"}}>
-            <span style={{fontSize:24}}>{t.ic}</span>
-            <span style={{fontSize:10,color:tipo===t.id?usuario.cor:"#666",fontWeight:700}}>{t.lb}</span>
+          <button key={t.id} className="tap-scale"
+            onClick={()=>setTipo(t.id)}
+            style={{
+              flexShrink:0,background: tipo===t.id?`${usuario.cor}18`:C.surface,
+              border:`1px solid ${tipo===t.id?usuario.cor:C.border}`,
+              borderRadius:r.lg,padding:"10px 12px",cursor:"pointer",
+              display:"flex",flexDirection:"column",alignItems:"center",gap:4,
+              minWidth:68,transition:"all .15s",
+            }}>
+            <span style={{fontSize:22}}>{t.ic}</span>
+            <span style={{fontSize:10,color:tipo===t.id?usuario.cor:C.textMuted,fontWeight:600}}>{t.lb}</span>
           </button>
         ))}
       </div>
 
-      {/* configuração */}
-      <div style={S.card}>
-        <div style={{marginBottom:18}}>
-          <div style={{fontSize:13,color:"#bbb",fontWeight:700,marginBottom:10}}>
-            ⏱ Duração: <span style={{color:usuario.cor}}>{minutos} minutos</span>
+      {/* config */}
+      <div style={cs.card}>
+        <div style={{marginBottom:sp.lg}}>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:sp.sm}}>
+            <Label>⏱ DURAÇÃO</Label>
+            <span style={{fontSize:16,fontWeight:700,color:usuario.cor,fontFamily:font.display}}>{minutos} min</span>
           </div>
           <input type="range" min={5} max={120} step={5} value={minutos}
             onChange={e=>setMinutos(+e.target.value)}
-            style={{width:"100%",accentColor:usuario.cor,cursor:"pointer",height:6,borderRadius:3,background:`linear-gradient(to right,${usuario.cor} ${((minutos-5)/115)*100}%,#1e1e35 0%)`}}/>
-          <div style={{display:"flex",justifyContent:"space-between",fontSize:10,color:"#444",marginTop:4}}>
-            <span>5 min</span><span>120 min</span>
+            style={{width:"100%",accentColor:usuario.cor,cursor:"pointer"}}/>
+          <div style={{display:"flex",justifyContent:"space-between",fontSize:10,color:C.textMuted,marginTop:4}}>
+            <span>5 min</span><span>2 horas</span>
           </div>
         </div>
         <div>
-          <div style={{fontSize:13,color:"#bbb",fontWeight:700,marginBottom:8}}>⚡ Intensidade</div>
-          <div style={{display:"flex",gap:8}}>
+          <Label>⚡ INTENSIDADE</Label>
+          <div style={{display:"flex",gap:sp.sm}}>
             {[["leve","🟢"],["moderado","🟡"],["intenso","🔴"]].map(([v,ic])=>(
-              <button key={v} onClick={()=>setIntens(v)}
-                style={{flex:1,padding:"10px 0",borderRadius:10,border:`1px solid ${intensidade===v?usuario.cor:"#1e1e35"}`,background:intensidade===v?`linear-gradient(135deg,${usuario.cor},${usuario.corEscura})`:"#111120",cursor:"pointer",color:"#fff",fontSize:12,fontWeight:700,transition:"all .2s"}}>
+              <button key={v} className="tap-scale"
+                onClick={()=>setIntens(v)}
+                style={{
+                  flex:1,padding:"11px 0",borderRadius:r.md,
+                  border:`1px solid ${intensidade===v?usuario.cor:C.border}`,
+                  background: intensidade===v ? `linear-gradient(135deg,${usuario.cor},${usuario.corEscura})` : C.surfaceHigh,
+                  cursor:"pointer",color:"#fff",fontSize:12,fontWeight:600,
+                  transition:"all .15s",fontFamily:font.body,
+                }}>
                 {ic} {v}
               </button>
             ))}
@@ -980,50 +1425,57 @@ function Cardio({ usuario, med }) {
         </div>
       </div>
 
-      {/* estimativa */}
-      <div style={{...S.card,border:`2px solid ${usuario.cor}44`,textAlign:"center",padding:28,background:`linear-gradient(135deg,${usuario.cor}08,#0d0d20)`}}>
-        <div style={{fontSize:52}}>🔥</div>
-        <div style={{fontFamily:"'Bebas Neue',cursive",fontSize:72,color:usuario.cor,lineHeight:1,textShadow:`0 0 30px ${usuario.corGlow}`}}>{kcal}</div>
-        <div style={{fontSize:15,color:"#888",marginTop:4}}>kcal estimadas</div>
-        <div style={{fontSize:12,color:"#666",marginTop:6,textTransform:"capitalize"}}>{minutos}min de {tipo} · {intensidade}</div>
-        <div style={{fontSize:11,color:"#444",marginTop:4}}>*Fórmula MET × {med.peso}kg (peso atual)</div>
+      {/* calorie display */}
+      <div style={{
+        ...cs.card,
+        border:`1.5px solid ${usuario.cor}33`,
+        background:`linear-gradient(135deg,${usuario.cor}0A,${C.surface})`,
+        padding:sp.xxl,textAlign:"center",
+        marginBottom:sp.lg,
+      }}>
+        <div style={{fontSize:40,marginBottom:sp.sm}}>🔥</div>
+        <div style={{fontFamily:font.display,fontSize:64,color:usuario.cor,lineHeight:1,letterSpacing:2}}>{kcal}</div>
+        <div style={{fontSize:14,color:C.textSub,marginTop:sp.sm}}>kcal estimadas</div>
+        <div style={{fontSize:11,color:C.textMuted,marginTop:sp.xs,textTransform:"capitalize"}}>
+          {minutos}min · {tipo} · {intensidade} · {med.peso}kg
+        </div>
       </div>
 
-      <button onClick={salvar} style={{...S.btnPrimary,background:`linear-gradient(135deg,${usuario.cor},${usuario.corEscura})`}}>
+      <button className="tap-scale"
+        onClick={salvar}
+        style={{...cs.btn,background:`linear-gradient(135deg,${usuario.cor},${usuario.corEscura})`}}>
         ✓ SALVAR SESSÃO
       </button>
 
-      {/* totais */}
-      <div style={{display:"flex",gap:10,marginBottom:0}}>
-        <div style={{...S.card,flex:1,textAlign:"center",padding:14}}>
-          <div style={{fontFamily:"'Bebas Neue',cursive",fontSize:28,color:usuario.cor}}>{totalMin}</div>
-          <div style={{fontSize:10,color:"#888",letterSpacing:1}}>MIN TOTAIS</div>
-        </div>
-        <div style={{...S.card,flex:1,textAlign:"center",padding:14}}>
-          <div style={{fontFamily:"'Bebas Neue',cursive",fontSize:28,color:"#FF9800"}}>{totalKcal}</div>
-          <div style={{fontSize:10,color:"#888",letterSpacing:1}}>KCAL QUEIMADAS</div>
-        </div>
-        <div style={{...S.card,flex:1,textAlign:"center",padding:14}}>
-          <div style={{fontFamily:"'Bebas Neue',cursive",fontSize:28,color:"#4CAF50"}}>{sessoes.length}</div>
-          <div style={{fontSize:10,color:"#888",letterSpacing:1}}>SESSÕES</div>
-        </div>
+      {/* totals row */}
+      <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:sp.sm,marginBottom:sp.lg}}>
+        <Metric value={totalMin+"m"} label="Total min" color={usuario.cor}/>
+        <Metric value={totalKcal} label="Kcal totais" color={C.warning}/>
+        <Metric value={sessoes.length} label="Sessões" color={C.success}/>
       </div>
 
-      {/* histórico */}
-      <div style={{...S.cardTit,marginBottom:10,marginTop:4}}>HISTÓRICO</div>
-      {sessoes.map((s,i)=>(
-        <div key={i} style={{...S.card,display:"flex",justifyContent:"space-between",alignItems:"center",borderLeft:`3px solid ${usuario.cor}`,padding:"12px 14px",marginBottom:8}}>
-          <div>
-            <div style={{fontSize:15,fontWeight:700}}>{s.tipo}</div>
-            <div style={{fontSize:11,color:"#888",marginTop:2}}>{s.data} · {s.intensidade}</div>
+      {/* history */}
+      <Label>HISTÓRICO</Label>
+      <div style={{marginTop:sp.sm}}>
+        {sessoes.map((s,i)=>(
+          <div key={i} style={{
+            ...cs.card,
+            display:"flex",justifyContent:"space-between",alignItems:"center",
+            borderLeft:`3px solid ${usuario.cor}55`,
+            padding:"12px 14px",marginBottom:sp.sm,
+          }}>
+            <div>
+              <div style={{fontSize:14,fontWeight:600}}>{s.tipo}</div>
+              <div style={{fontSize:11,color:C.textMuted,marginTop:2}}>{s.data} · {s.intensidade}</div>
+            </div>
+            <div style={{textAlign:"right"}}>
+              <div style={{color:usuario.cor,fontWeight:700,fontSize:14}}>{s.kcal} kcal</div>
+              <div style={{fontSize:11,color:C.textMuted}}>{s.min} min</div>
+            </div>
           </div>
-          <div style={{textAlign:"right"}}>
-            <div style={{color:usuario.cor,fontWeight:700}}>{s.kcal} kcal</div>
-            <div style={{fontSize:12,color:"#666"}}>{s.min} min</div>
-          </div>
-        </div>
-      ))}
-      <div style={{height:80}}/>
+        ))}
+      </div>
+      <Spacer h={80}/>
     </div>
   );
 }
@@ -1033,105 +1485,109 @@ function Cardio({ usuario, med }) {
 // ════════════════════════════════════════════════════════════════════
 function Evolucao({ usuario, med, salvarMedida }) {
   const [editando, setEditando] = useState(false);
-  const [form, setForm] = useState({...med});
-  const [hist] = useState(() => DB.get("hist_"+usuario.id, [
-    { data:"Mai/25", peso:usuario.pesoInicial, cintura:med.cintura+8 },
+  const [form,     setForm]     = useState({...med});
+  const [hist]                  = useState(() => DB.get("hist_"+usuario.id, [
+    { data:"Mai/25", peso:usuario.pesoInicial,   cintura:med.cintura+8 },
     { data:"Jun/25", peso:usuario.pesoInicial-3, cintura:med.cintura+4 },
-    { data:"Jul/25", peso:med.peso, cintura:med.cintura },
+    { data:"Jul/25", peso:med.peso,              cintura:med.cintura },
   ]));
 
-  const imcV   = imc(med.peso, usuario.altura);
-  const imcC   = imcCor(imcV);
-  const imcT   = imcTxt(imcV);
-  const prog   = pct(med.peso, usuario.pesoInicial, usuario.pesoMeta);
-  const perdido= (usuario.pesoInicial - med.peso).toFixed(1);
-
-  const maxP = Math.max(...hist.map(h=>h.peso));
-  const minP = Math.min(...hist.map(h=>h.peso));
-  const range= Math.max(1, maxP-minP);
+  const imcV    = imc(med.peso, usuario.altura);
+  const imcC    = imcCor(imcV);
+  const imcT    = imcTxt(imcV);
+  const prog    = pct(med.peso, usuario.pesoInicial, usuario.pesoMeta);
+  const perdido = (usuario.pesoInicial - med.peso).toFixed(1);
+  const maxP    = Math.max(...hist.map(h=>h.peso));
+  const minP    = Math.min(...hist.map(h=>h.peso));
+  const wRange  = Math.max(1, maxP-minP);
 
   const salvar = () => { Object.entries(form).forEach(([k,v])=>salvarMedida(k,v)); setEditando(false); };
 
   return (
-    <div style={S.tela}>
-      <div style={{paddingTop:20,marginBottom:20}}>
-        <div style={{fontFamily:"'Bebas Neue',cursive",fontSize:36,letterSpacing:4}}>EVOLUÇÃO</div>
-        <div style={{fontSize:12,color:"#666",letterSpacing:1}}>Acompanhe sua transformação</div>
+    <div style={cs.screen}>
+      <div style={cs.pageHead}>
+        <div style={{fontFamily:font.display,fontSize:34,letterSpacing:4,marginBottom:2}}>PROGRESSO</div>
+        <div style={{fontSize:12,color:C.textMuted}}>Acompanhe sua transformação</div>
       </div>
 
-      {/* IMC */}
-      <div style={{...S.card,border:`1px solid ${imcC}44`,background:`linear-gradient(135deg,${imcC}08,#0d0d20)`}}>
+      {/* IMC hero */}
+      <div style={{
+        ...cs.card,
+        border:`1px solid ${imcC}30`,
+        background:`linear-gradient(135deg,${imcC}0A,${C.surface})`,
+        marginBottom:sp.lg,
+      }}>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
           <div>
-            <div style={{fontSize:10,color:"#888",letterSpacing:3,marginBottom:6}}>IMC ATUAL</div>
-            <div style={{fontFamily:"'Bebas Neue',cursive",fontSize:64,color:imcC,lineHeight:1,textShadow:`0 0 30px ${imcC}66`}}>{imcV}</div>
-            <div style={{fontSize:14,color:imcC,fontWeight:700,marginTop:4}}>{imcT}</div>
+            <Label>IMC ATUAL</Label>
+            <div style={{fontFamily:font.display,fontSize:58,color:imcC,lineHeight:1,letterSpacing:1}}>{imcV}</div>
+            <Pill color={imcC} bg={`${imcC}18`}>{imcT}</Pill>
           </div>
           <div style={{textAlign:"right"}}>
-            <div style={{fontSize:10,color:"#888",marginBottom:4}}>ALTURA</div>
-            <div style={{fontFamily:"'Bebas Neue',cursive",fontSize:28,color:"#bbb"}}>{usuario.altura}cm</div>
-            <div style={{fontSize:10,color:"#888",marginTop:8,marginBottom:4}}>META</div>
-            <div style={{fontFamily:"'Bebas Neue',cursive",fontSize:24,color:"#4CAF50"}}>{usuario.pesoMeta}kg</div>
-            <div style={{fontSize:10,color:"#4CAF50",marginTop:2}}>IMC saudável: 18.5–25</div>
+            <div style={{fontSize:10,color:C.textMuted,marginBottom:2}}>ALTURA</div>
+            <div style={{fontFamily:font.display,fontSize:24,color:C.textSub}}>{usuario.altura}cm</div>
+            <Spacer h={sp.md}/>
+            <div style={{fontSize:10,color:C.textMuted,marginBottom:2}}>META</div>
+            <div style={{fontFamily:font.display,fontSize:22,color:C.success}}>{usuario.pesoMeta}kg</div>
           </div>
         </div>
       </div>
 
-      {/* progresso total */}
-      <div style={S.card}>
-        <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:10}}>
+      {/* progress card */}
+      <div style={{
+        ...cs.card,
+        background:`linear-gradient(135deg,${usuario.cor}0A,${C.surface})`,
+        border:`1px solid ${usuario.cor}28`,
+        padding:sp.xl,
+      }}>
+        <div style={{display:"flex",justifyContent:"space-between",marginBottom:sp.lg}}>
           <div>
-            <div style={S.cardTit}>PROGRESSO TOTAL</div>
-            <div style={{fontFamily:"'Bebas Neue',cursive",fontSize:40,color:usuario.cor,lineHeight:1.2}}>{prog.toFixed(0)}%</div>
+            <Label color={usuario.cor}>PROGRESSO TOTAL</Label>
+            <div style={{fontFamily:font.display,fontSize:48,color:usuario.cor,lineHeight:1,letterSpacing:1}}>
+              {prog.toFixed(0)}<span style={{fontSize:20}}>%</span>
+            </div>
           </div>
           <div style={{textAlign:"right"}}>
-            <div style={S.cardTit}>PERDIDOS</div>
-            <div style={{fontFamily:"'Bebas Neue',cursive",fontSize:36,color:"#4CAF50",lineHeight:1.2}}>-{perdido}kg</div>
+            <Label>PERDIDOS</Label>
+            <div style={{fontFamily:font.display,fontSize:36,color:C.success,lineHeight:1}}>-{perdido}kg</div>
+            <div style={{fontSize:11,color:C.textMuted,marginTop:4}}>Faltam {(med.peso-usuario.pesoMeta).toFixed(1)}kg</div>
           </div>
         </div>
-        <div style={{background:"#1e1e35",borderRadius:20,height:12,overflow:"hidden",marginBottom:6}}>
-          <div style={{height:"100%",width:`${prog}%`,background:`linear-gradient(90deg,${usuario.cor},${usuario.corEscura})`,borderRadius:20,transition:"width .6s ease",boxShadow:`0 0 12px ${usuario.corGlow}`}}/>
-        </div>
-        <div style={{display:"flex",justifyContent:"space-between"}}>
-          <span style={{fontSize:11,color:"#888"}}>Início: {usuario.pesoInicial}kg</span>
-          <span style={{fontSize:11,color:"#888"}}>Meta: {usuario.pesoMeta}kg · Faltam: {(med.peso-usuario.pesoMeta).toFixed(1)}kg</span>
+        <ProgressBar value={prog} color={`linear-gradient(90deg,${usuario.cor},${usuario.corEscura})`} height={10} glow/>
+        <div style={{display:"flex",justifyContent:"space-between",marginTop:sp.sm}}>
+          <span style={{fontSize:10,color:C.textMuted}}>Início {usuario.pesoInicial}kg</span>
+          <span style={{fontSize:10,color:C.textMuted}}>Meta {usuario.pesoMeta}kg</span>
         </div>
       </div>
 
-      {/* gráfico SVG */}
-      <div style={S.card}>
-        <div style={S.cardTit}>📊 GRÁFICO DE PESO</div>
-        <div style={{background:"#08080f",borderRadius:12,padding:"16px 8px 8px",marginTop:10,overflow:"hidden"}}>
-          <svg viewBox={`0 0 ${hist.length*110} 130`} style={{width:"100%",height:140}}>
+      {/* chart */}
+      <div style={{...cs.card,marginBottom:sp.lg}}>
+        <Label>📊 EVOLUÇÃO DO PESO</Label>
+        <div style={{background:C.bg,borderRadius:r.md,padding:"16px 8px 8px",marginTop:sp.sm,overflow:"hidden"}}>
+          <svg viewBox={`0 0 ${hist.length*110} 130`} style={{width:"100%",height:130}}>
             <defs>
               <linearGradient id={`grad-${usuario.id}`} x1="0%" y1="0%" x2="0%" y2="100%">
-                <stop offset="0%" stopColor={usuario.cor} stopOpacity=".35"/>
+                <stop offset="0%" stopColor={usuario.cor} stopOpacity=".3"/>
                 <stop offset="100%" stopColor={usuario.cor} stopOpacity="0"/>
               </linearGradient>
             </defs>
-            {/* área preenchida */}
             <polygon
-              points={[
-                ...hist.map((h,i)=>`${i*110+55},${105-((h.peso-minP)/range)*80}`),
-                `${(hist.length-1)*110+55},110`,
-                `55,110`
-              ].join(" ")}
+              points={[...hist.map((h,i)=>`${i*110+55},${100-((h.peso-minP)/wRange)*75}`),`${(hist.length-1)*110+55},110 55,110`].join(" ")}
               fill={`url(#grad-${usuario.id})`}
             />
-            {/* linha */}
             <polyline
-              points={hist.map((h,i)=>`${i*110+55},${105-((h.peso-minP)/range)*80}`).join(" ")}
-              fill="none" stroke={usuario.cor} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
+              points={hist.map((h,i)=>`${i*110+55},${100-((h.peso-minP)/wRange)*75}`).join(" ")}
+              fill="none" stroke={usuario.cor} strokeWidth="2.5"
+              strokeLinecap="round" strokeLinejoin="round"
             />
-            {/* pontos e labels */}
             {hist.map((h,i)=>{
               const x=i*110+55;
-              const y=105-((h.peso-minP)/range)*80;
+              const y=100-((h.peso-minP)/wRange)*75;
               return (
                 <g key={i}>
-                  <circle cx={x} cy={y} r="7" fill={usuario.cor} filter={`drop-shadow(0 0 4px ${usuario.cor})`}/>
-                  <text x={x} y={y-14} textAnchor="middle" fill={usuario.cor} fontSize="11" fontWeight="bold">{h.peso}kg</text>
-                  <text x={x} y="125" textAnchor="middle" fill="#555" fontSize="9">{h.data}</text>
+                  <circle cx={x} cy={y} r="6" fill={usuario.cor}/>
+                  <text x={x} y={y-12} textAnchor="middle" fill={usuario.cor} fontSize="11" fontWeight="bold">{h.peso}kg</text>
+                  <text x={x} y="124" textAnchor="middle" fill={C.textMuted} fontSize="9">{h.data}</text>
                 </g>
               );
             })}
@@ -1139,179 +1595,81 @@ function Evolucao({ usuario, med, salvarMedida }) {
         </div>
       </div>
 
-      {/* medidas */}
-      <div style={S.card}>
-        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
-          <div style={S.cardTit}>📏 MEDIDAS CORPORAIS</div>
-          <button onClick={()=>editando?setEditando(false):setEditando(true)}
-            style={{background:"none",border:`1px solid ${editando?"#F44336":usuario.cor}`,borderRadius:8,padding:"5px 14px",color:editando?"#F44336":usuario.cor,fontSize:12,fontWeight:700,cursor:"pointer"}}>
-            {editando?"✕ Cancelar":"✏️ Atualizar"}
+      {/* measurements */}
+      <div style={cs.card}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:sp.md}}>
+          <Label>📏 MEDIDAS CORPORAIS</Label>
+          <button className="tap-scale"
+            onClick={()=>editando?setEditando(false):setEditando(true)}
+            style={{
+              background:"none",
+              border:`1px solid ${editando?C.danger:usuario.cor}`,
+              borderRadius:r.pill,padding:"4px 14px",
+              color:editando?C.danger:usuario.cor,
+              fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:font.body,
+            }}>
+            {editando?"✕ Cancelar":"✏️ Editar"}
           </button>
         </div>
+
         {[["peso","⚖️","Peso","kg"],["peito","📏","Peitoral","cm"],["cintura","📏","Cintura","cm"],["quadril","📏","Quadril","cm"],["braco","💪","Braço","cm"],["coxa","🦵","Coxa","cm"]].map(([campo,ic,label,unidade])=>(
-          <div key={campo} style={{display:"flex",alignItems:"center",gap:10,padding:"11px 0",borderBottom:"1px solid #0d0d20"}}>
-            <span style={{fontSize:18,width:26}}>{ic}</span>
-            <span style={{flex:1,fontSize:14,color:"#bbb"}}>{label}</span>
+          <div key={campo} style={{
+            display:"flex",alignItems:"center",gap:sp.md,
+            padding:`${sp.sm}px 0`,
+            borderBottom:`1px solid ${C.border}`,
+          }}>
+            <span style={{fontSize:18,width:26,flexShrink:0}}>{ic}</span>
+            <span style={{flex:1,fontSize:13,color:C.textSub}}>{label}</span>
             {editando ? (
               <input type="number" value={form[campo]}
                 onChange={e=>setForm(p=>({...p,[campo]:e.target.value}))}
-                style={{width:84,background:"#111120",border:`1px solid ${usuario.cor}`,borderRadius:9,padding:"7px 10px",color:"#fff",fontSize:14,textAlign:"center",fontFamily:"'DM Sans',sans-serif"}}/>
+                style={{
+                  width:80,background:C.surfaceHigh,
+                  border:`1px solid ${usuario.cor}`,
+                  borderRadius:r.sm,padding:"7px 10px",
+                  color:C.text,fontSize:14,textAlign:"center",
+                  fontFamily:font.body,
+                }}/>
             ) : (
-              <span style={{fontFamily:"'Bebas Neue',cursive",fontSize:22,color:usuario.cor}}>{med[campo]} {unidade}</span>
+              <span style={{fontFamily:font.display,fontSize:20,color:usuario.cor,letterSpacing:.5}}>
+                {med[campo]} {unidade}
+              </span>
             )}
           </div>
         ))}
+
         {editando && (
-          <button onClick={salvar} style={{...S.btnPrimary,background:`linear-gradient(135deg,${usuario.cor},${usuario.corEscura})`,marginTop:14}}>
+          <button className="tap-scale"
+            onClick={salvar}
+            style={{...cs.btn,background:`linear-gradient(135deg,${usuario.cor},${usuario.corEscura})`,marginTop:sp.md,marginBottom:0}}>
             ✓ SALVAR MEDIDAS
           </button>
         )}
       </div>
 
-      {/* frequência */}
-      <div style={{...S.card,marginBottom:16}}>
-        <div style={S.cardTit}>📅 FREQUÊNCIA SEMANAL</div>
-        <div style={{display:"flex",gap:5,marginTop:10}}>
+      {/* weekly freq */}
+      <div style={{...cs.card,marginBottom:sp.xl}}>
+        <Label>📅 FREQUÊNCIA SEMANAL</Label>
+        <div style={{display:"flex",gap:5,marginTop:sp.sm}}>
           {DIAS.map((d,i)=>{
             const t=[false,true,true,true,true,false,true][i];
-            const hoje2=new Date().getDay()===i;
+            const h=new Date().getDay()===i;
             return (
-              <div key={d} style={{flex:1,borderRadius:10,padding:"8px 0",display:"flex",flexDirection:"column",alignItems:"center",gap:4,background:hoje2?`${usuario.cor}18`:"#111120",border:`1px solid ${hoje2?usuario.cor:"#1e1e35"}`}}>
-                <span style={{fontSize:9,color:hoje2?usuario.cor:"#555",fontWeight:hoje2?700:400}}>{d}</span>
-                <span style={{fontSize:16}}>{t?"✅":"❌"}</span>
+              <div key={d} style={{
+                flex:1,borderRadius:r.md,
+                padding:"8px 0",
+                display:"flex",flexDirection:"column",alignItems:"center",gap:3,
+                background:h?`${usuario.cor}18`:C.surfaceHigh,
+                border:`1px solid ${h?usuario.cor:C.border}`,
+              }}>
+                <span style={{fontSize:9,color:h?usuario.cor:C.textMuted,fontWeight:h?700:400}}>{d}</span>
+                <span style={{fontSize:14}}>{t?"✅":"❌"}</span>
               </div>
             );
           })}
         </div>
       </div>
-      <div style={{height:80}}/>
-    </div>
-  );
-}
-
-// ════════════════════════════════════════════════════════════════════
-// NUTRIÇÃO
-// ════════════════════════════════════════════════════════════════════
-function Nutri({ usuario, nutri }) {
-  const [marcadas, setMarcadas] = useState(() => DB.get("nutri_"+usuario.id+"_"+new Date().toDateString(), {}));
-  const [proteina, setProteina] = useState(() => DB.get("prot_"+usuario.id+"_"+new Date().toDateString(), 0));
-  const [agua,     setAguaN]    = useState(() => DB.get("agua2_"+usuario.id+"_"+new Date().toDateString(), 0));
-
-  const marcar = id => {
-    const n = {...marcadas,[id]:!marcadas[id]};
-    setMarcadas(n); DB.set("nutri_"+usuario.id+"_"+new Date().toDateString(), n);
-  };
-  const addProt = g => {
-    const n = Math.min(nutri.proteina, proteina+g);
-    setProteina(n); DB.set("prot_"+usuario.id+"_"+new Date().toDateString(), n);
-  };
-
-  const kcalComida = nutri.refeicoes.filter(r=>marcadas[r.id]).reduce((a,r)=>a+r.kcal,0);
-  const protComida = nutri.refeicoes.filter(r=>marcadas[r.id]).reduce((a,r)=>a+r.prot,0) + proteina;
-  const kcalPct    = Math.min(100,(kcalComida/nutri.kcalMeta)*100);
-  const protPct    = Math.min(100,(protComida/nutri.proteina)*100);
-  const aguaMeta   = Math.round(nutri.agua*4);
-  const aguaPct    = Math.min(100,(agua/aguaMeta)*100);
-
-  return (
-    <div style={S.tela}>
-      <div style={{paddingTop:20,marginBottom:20}}>
-        <div style={{fontFamily:"'Bebas Neue',cursive",fontSize:36,letterSpacing:4}}>NUTRIÇÃO</div>
-        <div style={{fontSize:12,color:"#666",letterSpacing:1}}>Alimentação para sua meta</div>
-      </div>
-
-      {/* calorias */}
-      <div style={{...S.card,border:`1px solid ${usuario.cor}33`}}>
-        <div style={S.cardTit}>🔥 BALANÇO CALÓRICO</div>
-        <div style={{display:"flex",justifyContent:"space-around",margin:"14px 0",padding:"12px 0",background:"#08080f",borderRadius:12}}>
-          {[["TDEE",nutri.kcalMeta+500,"#888"],["META",nutri.kcalMeta,usuario.cor],["HOJE",kcalComida,"#FF9800"]].map(([l,v,c])=>(
-            <div key={l} style={{textAlign:"center"}}>
-              <div style={{fontFamily:"'Bebas Neue',cursive",fontSize:26,color:c}}>{v}</div>
-              <div style={{fontSize:9,color:"#666",marginTop:2}}>kcal</div>
-              <div style={{fontSize:9,color:"#444",letterSpacing:1}}>{l}</div>
-            </div>
-          ))}
-        </div>
-        <div style={{background:"#1e1e35",borderRadius:20,height:8,overflow:"hidden",marginBottom:6}}>
-          <div style={{height:"100%",width:`${kcalPct}%`,background:kcalPct>100?"#F44336":`linear-gradient(90deg,${usuario.cor},${usuario.corEscura})`,borderRadius:20,transition:"width .4s ease"}}/>
-        </div>
-        <div style={{textAlign:"right",fontSize:11,color:"#888"}}>{kcalComida}/{nutri.kcalMeta} kcal</div>
-      </div>
-
-      {/* proteína */}
-      <div style={{...S.card,border:"1px solid #F4433622"}}>
-        <div style={S.cardTit}>🥩 PROTEÍNA</div>
-        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",margin:"10px 0"}}>
-          <span style={{fontFamily:"'Bebas Neue',cursive",fontSize:32,color:"#F44336"}}>{protComida}/{nutri.proteina}g</span>
-          <div style={{display:"flex",gap:6,flexWrap:"wrap",justifyContent:"flex-end"}}>
-            {[10,20,30,50].map(g=>(
-              <button key={g} onClick={()=>addProt(g)}
-                style={{padding:"6px 10px",borderRadius:8,background:"#111120",border:"1px solid #1e1e35",color:"#fff",fontSize:12,fontWeight:700,cursor:"pointer"}}>
-                +{g}g
-              </button>
-            ))}
-            <button onClick={()=>{ setProteina(0); DB.set("prot_"+usuario.id+"_"+new Date().toDateString(),0); }}
-              style={{padding:"6px 10px",borderRadius:8,background:"#111120",border:"1px solid #1e1e35",color:"#F44336",fontSize:12,fontWeight:700,cursor:"pointer"}}>✕</button>
-          </div>
-        </div>
-        <div style={{background:"#1e1e35",borderRadius:20,height:7,overflow:"hidden"}}>
-          <div style={{height:"100%",width:`${protPct}%`,background:"linear-gradient(90deg,#F44336,#B71C1C)",borderRadius:20,transition:"width .4s ease"}}/>
-        </div>
-      </div>
-
-      {/* água */}
-      <div style={{...S.card,border:"1px solid #00B0FF22"}}>
-        <div style={{display:"flex",justifyContent:"space-between",marginBottom:8}}>
-          <span style={S.cardTit}>💧 HIDRATAÇÃO</span>
-          <span style={{color:"#00B0FF",fontWeight:700,fontSize:13}}>{(agua*.25).toFixed(1)}L / {nutri.agua}L</span>
-        </div>
-        <div style={{background:"#1e1e35",borderRadius:20,height:7,overflow:"hidden",marginBottom:10}}>
-          <div style={{height:"100%",width:`${aguaPct}%`,background:"linear-gradient(90deg,#00B0FF,#0055CC)",borderRadius:20,transition:"width .4s ease"}}/>
-        </div>
-        <div style={{display:"flex",gap:5,flexWrap:"wrap"}}>
-          {[...Array(aguaMeta)].map((_,i)=>(
-            <button key={i} onClick={()=>{ const n=i+1; setAguaN(n); DB.set("agua2_"+usuario.id+"_"+new Date().toDateString(),n); }}
-              style={{width:38,height:38,borderRadius:9,border:`1px solid ${i<agua?"#00B0FF":"#1e1e35"}`,background:i<agua?"#00B0FF22":"#111120",cursor:"pointer",fontSize:14,transition:"all .2s"}}>
-              💧
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* refeições */}
-      <div style={S.card}>
-        <div style={S.cardTit}>🍽️ REFEIÇÕES DO DIA</div>
-        {nutri.refeicoes.map(r=>(
-          <div key={r.id} onClick={()=>marcar(r.id)}
-            style={{display:"flex",alignItems:"center",gap:12,padding:"12px 10px",borderRadius:12,marginTop:8,cursor:"pointer",background:marcadas[r.id]?`${usuario.cor}0f`:"transparent",border:`1px solid ${marcadas[r.id]?usuario.cor+"44":"#1e1e35"}`,transition:"all .2s"}}>
-            <span style={{fontSize:26}}>{r.ic}</span>
-            <div style={{flex:1}}>
-              <div style={{fontSize:12,color:"#555"}}>{r.hora}</div>
-              <div style={{fontSize:15,fontWeight:700,color:marcadas[r.id]?usuario.cor:"#fff"}}>{r.nome}</div>
-              <div style={{fontSize:12,color:"#888",marginTop:2,lineHeight:1.4}}>{r.desc}</div>
-              <div style={{fontSize:11,color:"#666",marginTop:3}}>🔥 {r.kcal} kcal · 🥩 {r.prot}g</div>
-            </div>
-            <div style={{width:26,height:26,borderRadius:7,border:`2px solid ${marcadas[r.id]?usuario.cor:"#1e1e35"}`,background:marcadas[r.id]?usuario.cor:"transparent",display:"flex",alignItems:"center",justifyContent:"center",color:"#000",fontWeight:900,fontSize:14,flexShrink:0,transition:"all .2s"}}>
-              {marcadas[r.id]&&"✓"}
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {/* dicas */}
-      <div style={{background:"#08080f",borderRadius:14,padding:16,marginBottom:16,border:"1px solid #1e1e35"}}>
-        <div style={S.cardTit}>💡 REEDUCAÇÃO ALIMENTAR</div>
-        {[["🥗","Proteína em toda refeição","Aumenta saciedade e preserva músculo."],["🚫","Evite líquidos calóricos","Sucos, refrigerantes e álcool boicotam o déficit."],["⏰","Pré-treino estratégico","Carboidrato 30 min antes · proteína depois."],["🌙","Jantar leve","Proteína magra + legumes · sem carbos pesados."]].map(([ic,t,d])=>(
-          <div key={t} style={{display:"flex",gap:10,marginTop:12}}>
-            <span style={{fontSize:20,flexShrink:0}}>{ic}</span>
-            <div>
-              <div style={{fontSize:13,fontWeight:700}}>{t}</div>
-              <div style={{fontSize:12,color:"#888",marginTop:2,lineHeight:1.5}}>{d}</div>
-            </div>
-          </div>
-        ))}
-      </div>
-      <div style={{height:80}}/>
+      <Spacer h={80}/>
     </div>
   );
 }
@@ -1326,91 +1684,82 @@ function Perfil({ usuario, med, onLogout, outroPerfil, outroMed }) {
   const prog = pct(med.peso, usuario.pesoInicial, usuario.pesoMeta);
 
   return (
-    <div style={S.tela}>
-      <div style={{paddingTop:20,marginBottom:20}}>
-        <div style={{fontFamily:"'Bebas Neue',cursive",fontSize:36,letterSpacing:4}}>PERFIL</div>
+    <div style={cs.screen}>
+      <div style={cs.pageHead}>
+        <div style={{fontFamily:font.display,fontSize:34,letterSpacing:4,marginBottom:2}}>PERFIL</div>
       </div>
 
-      {/* hero */}
-      <div style={{...S.card,background:`linear-gradient(135deg,${usuario.cor}10,#0d0d20)`,border:`1px solid ${usuario.cor}44`,textAlign:"center",padding:30}}>
-        <div style={{position:"relative",display:"inline-block",marginBottom:16}}>
+      {/* profile hero */}
+      <div style={{
+        ...cs.card,
+        background:`linear-gradient(145deg,${usuario.cor}12,${C.surface})`,
+        border:`1px solid ${usuario.cor}28`,
+        textAlign:"center",padding:sp.xxl,
+        marginBottom:sp.lg,
+      }}>
+        <div style={{position:"relative",display:"inline-block",marginBottom:sp.lg}}>
           <img src={usuario.foto} alt={usuario.nome}
-            style={{width:110,height:110,borderRadius:"50%",objectFit:"cover",objectPosition:"top",border:`3px solid ${usuario.cor}`,boxShadow:`0 0 30px ${usuario.corGlow}`}}/>
-          <div style={{position:"absolute",bottom:4,right:4,width:20,height:20,borderRadius:"50%",background:usuario.cor,border:"2px solid #0d0d20",display:"flex",alignItems:"center",justifyContent:"center",fontSize:10,color:"#000",fontWeight:900}}>✓</div>
+            style={{
+              width:100,height:100,borderRadius:"50%",
+              objectFit:"cover",objectPosition:"top",
+              border:`3px solid ${usuario.cor}`,
+              boxShadow:`0 0 0 6px ${usuario.cor}20`,
+            }}/>
+          <div style={{
+            position:"absolute",bottom:4,right:4,
+            width:20,height:20,borderRadius:"50%",
+            background:usuario.cor,
+            border:`2px solid ${C.bg}`,
+            display:"flex",alignItems:"center",
+            justifyContent:"center",fontSize:10,color:"#000",fontWeight:900,
+          }}>✓</div>
         </div>
-        <div style={{fontFamily:"'Bebas Neue',cursive",fontSize:36,letterSpacing:4,color:usuario.cor}}>{usuario.nome.toUpperCase()}</div>
-        <div style={{fontSize:14,color:"#888",marginTop:4}}>{usuario.objetivo}</div>
-        <div style={{fontSize:12,color:"#666",marginTop:2}}>{usuario.nivel} · {usuario.frequencia} · {usuario.horario}</div>
-        <div style={{display:"flex",justifyContent:"center",gap:20,marginTop:18}}>
-          {[["⚖️",med.peso+"kg","Peso atual"],[imcT.includes("Normal")?"✅":"⚠️",imcV,imcT],["🎯",usuario.pesoMeta+"kg","Meta"]].map(([ic,v,l])=>(
-            <div key={l} style={{textAlign:"center"}}>
-              <div style={{fontSize:20}}>{ic}</div>
-              <div style={{fontFamily:"'Bebas Neue',cursive",fontSize:20,color:usuario.cor,lineHeight:1.2}}>{v}</div>
-              <div style={{fontSize:10,color:"#888",marginTop:2}}>{l}</div>
-            </div>
-          ))}
+        <div style={{fontFamily:font.display,fontSize:34,letterSpacing:4,color:usuario.cor,marginBottom:4}}>{usuario.nome.toUpperCase()}</div>
+        <div style={{fontSize:13,color:C.textSub,marginBottom:sp.sm}}>{usuario.objetivo}</div>
+        <Pill>{usuario.nivel} · {usuario.frequencia}</Pill>
+
+        <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:sp.sm,marginTop:sp.lg}}>
+          <Metric icon="⚖️" value={med.peso+"kg"} label="Peso atual" color={usuario.cor}/>
+          <Metric icon="📊" value={imcV} label={imcT} color={imcC}/>
+          <Metric icon="🎯" value={usuario.pesoMeta+"kg"} label="Meta" color={C.success}/>
         </div>
       </div>
 
-      {/* progresso */}
-      <div style={S.card}>
-        <div style={{display:"flex",justifyContent:"space-between",marginBottom:8}}>
-          <span style={S.cardTit}>PROGRESSO PARA A META</span>
-          <span style={{color:usuario.cor,fontWeight:700,fontSize:18}}>{prog.toFixed(0)}%</span>
+      {/* progress */}
+      <div style={{...cs.card,marginBottom:sp.lg}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:sp.md}}>
+          <Label>PROGRESSO PARA A META</Label>
+          <span style={{fontFamily:font.display,fontSize:22,color:usuario.cor}}>{prog.toFixed(0)}%</span>
         </div>
-        <div style={{background:"#1e1e35",borderRadius:20,height:10,overflow:"hidden",marginBottom:6}}>
-          <div style={{height:"100%",width:`${prog}%`,background:`linear-gradient(90deg,${usuario.cor},${usuario.corEscura})`,borderRadius:20,boxShadow:`0 0 10px ${usuario.corGlow}`}}/>
-        </div>
-        <div style={{display:"flex",justifyContent:"space-between"}}>
-          <span style={{fontSize:11,color:"#888"}}>Início: {usuario.pesoInicial}kg</span>
-          <span style={{fontSize:11,color:"#4CAF50"}}>Meta: {usuario.pesoMeta}kg</span>
+        <ProgressBar value={prog} color={`linear-gradient(90deg,${usuario.cor},${usuario.corEscura})`} height={8} glow/>
+        <div style={{display:"flex",justifyContent:"space-between",marginTop:sp.sm}}>
+          <span style={{fontSize:10,color:C.textMuted}}>Início {usuario.pesoInicial}kg</span>
+          <span style={{fontSize:10,color:C.textMuted}}>Meta {usuario.pesoMeta}kg</span>
         </div>
       </div>
 
-      {/* informações */}
-      <div style={S.card}>
-        <div style={S.cardTit}>📋 INFORMAÇÕES</div>
+      {/* info */}
+      <div style={{...cs.card,marginBottom:sp.lg}}>
+        <Label>📋 INFORMAÇÕES</Label>
         {[["📏","Altura",usuario.altura+"cm"],["⚖️","Peso Inicial",usuario.pesoInicial+"kg"],["🎯","Objetivo",usuario.objetivo],["🏋️","Nível",usuario.nivel],["📅","Frequência",usuario.frequencia],["🕐","Horário",usuario.horario]].map(([ic,l,v])=>(
-          <div key={l} style={{display:"flex",gap:10,padding:"10px 0",borderBottom:"1px solid #0d0d20",alignItems:"center"}}>
-            <span style={{fontSize:18,width:26}}>{ic}</span>
-            <span style={{flex:1,fontSize:13,color:"#888"}}>{l}</span>
-            <span style={{fontSize:13,color:"#fff",fontWeight:600}}>{v}</span>
+          <div key={l} style={{display:"flex",alignItems:"center",gap:sp.md,padding:`${sp.sm}px 0`,borderBottom:`1px solid ${C.border}`}}>
+            <span style={{fontSize:16,width:22,flexShrink:0}}>{ic}</span>
+            <span style={{flex:1,fontSize:13,color:C.textSub}}>{l}</span>
+            <span style={{fontSize:13,color:C.text,fontWeight:500}}>{v}</span>
           </div>
         ))}
       </div>
 
-      {/* IMC detalhado */}
-      <div style={{...S.card,border:`1px solid ${imcC}33`}}>
-        <div style={S.cardTit}>📊 STATUS DE SAÚDE</div>
-        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginTop:10}}>
-          <div>
-            <div style={{fontFamily:"'Bebas Neue',cursive",fontSize:52,color:imcC,lineHeight:1}}>{imcV}</div>
-            <div style={{fontSize:14,color:imcC,fontWeight:700,marginTop:4}}>{imcT}</div>
-          </div>
-          <div style={{textAlign:"right"}}>
-            <div style={{fontSize:12,color:"#888"}}>IMC saudável</div>
-            <div style={{fontFamily:"'Bebas Neue',cursive",fontSize:22,color:"#4CAF50"}}>18.5–24.9</div>
-            <div style={{fontSize:12,color:"#888",marginTop:6}}>Faltam perder</div>
-            <div style={{fontFamily:"'Bebas Neue',cursive",fontSize:22,color:"#FF9800"}}>{(med.peso-usuario.pesoMeta).toFixed(1)}kg</div>
-          </div>
-        </div>
-      </div>
-
-      {/* parceiro */}
-      <div style={{...S.card,border:`1px solid ${outroPerfil.cor}22`}}>
-        <div style={S.cardTit}>👫 MEU PARCEIRO(A)</div>
-        <div style={{display:"flex",alignItems:"center",gap:16,marginTop:12}}>
+      {/* partner */}
+      <div style={{...cs.card,border:`1px solid ${outroPerfil.cor}22`,marginBottom:sp.lg}}>
+        <Label>👫 MEU PARCEIRO(A)</Label>
+        <div style={{display:"flex",alignItems:"center",gap:sp.lg,marginTop:sp.md}}>
           <img src={outroPerfil.foto} alt={outroPerfil.nome}
-            style={{width:70,height:70,borderRadius:"50%",objectFit:"cover",objectPosition:"top",border:`2px solid ${outroPerfil.cor}`,boxShadow:`0 0 16px ${outroPerfil.corGlow}`,flexShrink:0}}/>
+            style={{width:64,height:64,borderRadius:"50%",objectFit:"cover",objectPosition:"top",border:`2px solid ${outroPerfil.cor}`,flexShrink:0}}/>
           <div style={{flex:1}}>
-            <div style={{fontFamily:"'Bebas Neue',cursive",fontSize:26,letterSpacing:3,color:outroPerfil.cor}}>{outroPerfil.nome.toUpperCase()}</div>
-            <div style={{fontSize:12,color:"#888",marginTop:2}}>{outroPerfil.objetivo}</div>
-            <div style={{fontSize:11,color:"#888",marginTop:2}}>
-              IMC: {imc(outroMed.peso||outroPerfil.pesoInicial,outroPerfil.altura)} · Peso: {outroMed.peso||outroPerfil.pesoInicial}kg
-            </div>
-            <div style={{background:"#1e1e35",borderRadius:20,height:5,overflow:"hidden",marginTop:8}}>
-              <div style={{height:"100%",width:`${pct(outroMed.peso||outroPerfil.pesoInicial,outroPerfil.pesoInicial,outroPerfil.pesoMeta)}%`,background:`linear-gradient(90deg,${outroPerfil.cor},${outroPerfil.corEscura})`,borderRadius:20}}/>
-            </div>
+            <div style={{fontFamily:font.display,fontSize:22,letterSpacing:3,color:outroPerfil.cor,lineHeight:1,marginBottom:4}}>{outroPerfil.nome.toUpperCase()}</div>
+            <div style={{fontSize:12,color:C.textSub,marginBottom:sp.sm}}>{outroPerfil.objetivo}</div>
+            <ProgressBar value={pct(outroMed.peso||outroPerfil.pesoInicial,outroPerfil.pesoInicial,outroPerfil.pesoMeta)} color={`linear-gradient(90deg,${outroPerfil.cor},${outroPerfil.corEscura})`} height={4}/>
             <div style={{fontSize:11,color:outroPerfil.cor,marginTop:4}}>
               {pct(outroMed.peso||outroPerfil.pesoInicial,outroPerfil.pesoInicial,outroPerfil.pesoMeta).toFixed(0)}% da meta
             </div>
@@ -1418,11 +1767,11 @@ function Perfil({ usuario, med, onLogout, outroPerfil, outroMed }) {
         </div>
       </div>
 
-      <button onClick={onLogout}
-        style={{...S.btnPrimary,background:"linear-gradient(135deg,#1e1e35,#111120)",border:"1px solid #1e1e35",marginBottom:20}}>
+      <button className="tap-scale" onClick={onLogout}
+        style={{...cs.btn,background:C.surface,border:`1px solid ${C.border}`,color:C.textSub,marginBottom:sp.md}}>
         ↩ TROCAR PERFIL
       </button>
-      <div style={{height:60}}/>
+      <Spacer h={60}/>
     </div>
   );
 }
@@ -1616,6 +1965,7 @@ const COMPARATIVO_PAO = [
   { situacao: "Omelete (sem pão)", kcal: 290, prot: 20, saciedade: 5, nota: "⭐ Ideal" },
   { situacao: "Iogurte + granola", kcal: 280, prot: 18, saciedade: 4, nota: "✅ Rápido igual" },
 ];
+
 
 // ════════════════════════════════════════════════════════════════════
 // TELA — ALIMENTAÇÃO PRÁTICA
@@ -1975,14 +2325,3 @@ function AlimPratica({ usuario, nutri }) {
   );
 }
 
-// ════════════════════════════════════════════════════════════════════
-// ESTILOS GLOBAIS
-// ════════════════════════════════════════════════════════════════════
-const S = {
-  splash:    { minHeight:"100vh", background:"#060612", display:"flex", alignItems:"center", justifyContent:"center", fontFamily:"'DM Sans',sans-serif", position:"relative", overflow:"hidden" },
-  tela:      { padding:"0 14px", fontFamily:"'DM Sans',sans-serif" },
-  card:      { background:"#0d0d20", borderRadius:16, padding:16, marginBottom:12 },
-  cardTit:   { fontSize:10, color:"#888", letterSpacing:2, fontWeight:700 },
-  btnPrimary:{ width:"100%", padding:"15px 0", borderRadius:13, border:"none", color:"#fff", fontWeight:700, fontSize:14, letterSpacing:2, cursor:"pointer", display:"block", textAlign:"center", marginBottom:12 },
-  back:      { background:"none", border:"none", color:"#888", fontSize:13, cursor:"pointer", paddingBottom:8, letterSpacing:1, display:"block" },
-};
