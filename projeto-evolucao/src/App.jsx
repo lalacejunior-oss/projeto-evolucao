@@ -746,7 +746,10 @@ function Home({ usuario, med, treinos, setTab, onLogout, outro, outroPerfil }) {
 // TREINO
 // ════════════════════════════════════════════════════════════════════
 function Treino({ usuario, treinos, med }) {
-  const [vista,  setVista]  = useState("lista");
+  const [vista,  setVista]  = useState(() => {
+    const idx = DIAS_TREINO[new Date().getDay()];
+    return idx !== null ? "det" : "lista";
+  });
   const [sel,    setSel]    = useState(null);
   const [exIdx,  setExIdx]  = useState(0);
   const [timer,  setTimer]  = useState(0);
@@ -990,20 +993,11 @@ function Treino({ usuario, treinos, med }) {
   }
 
   // ── TODAY VIEW (default) ──
-  // Automatically show today's workout or rest day
   const diaIdxT = DIAS_TREINO[new Date().getDay()];
   const treinoHoje2 = diaIdxT !== null ? Object.values(treinos)[diaIdxT] : null;
 
-  // Auto-open today's detail on first render
-  useEffect(() => {
-    if (treinoHoje2 && vista === "lista") {
-      setSel(treinoHoje2);
-      setVista("det");
-    }
-  }, []);
-
-  // Fallback: rest day
-  if (!treinoHoje2) {
+  // Rest day
+  if (!treinoHoje2 && vista === "lista") {
     return (
       <div style={cs.screen}>
         <div style={cs.pageHead}>
@@ -1021,11 +1015,75 @@ function Treino({ usuario, treinos, med }) {
     );
   }
 
-  // Loading state while auto-redirect
+  // If vista is "det" but sel not set yet, use today's workout
+  const treinoAtual = sel || treinoHoje2;
+
+  if (vista === "det" && treinoAtual) {
+    // re-use the detail view with today's workout
+    const totalKcal = treinoAtual.exercicios.reduce((a,e)=>a+e.kcal*e.series,0);
+    return (
+      <div style={cs.screen}>
+        <div style={{paddingTop:sp.xl,paddingBottom:sp.md}}>
+          <button style={cs.btnGhost} onClick={()=>{ setSel(null); setVista("lista"); setExIdx(0); }}>← Treinos</button>
+        </div>
+        <div style={{
+          background:`linear-gradient(135deg,${usuario.cor}12,${C.surface})`,
+          borderRadius:r.xl,padding:sp.xl,marginBottom:sp.lg,
+          border:`1px solid ${usuario.cor}28`,
+        }}>
+          <Pill color={usuario.cor} bg={`${usuario.cor}18`}>{treinoAtual.dia}</Pill>
+          <div style={{fontFamily:font.display,fontSize:28,letterSpacing:2,marginTop:sp.sm,marginBottom:4}}>{treinoAtual.nome}</div>
+          <div style={{fontSize:13,color:C.textSub,marginBottom:sp.md}}>{treinoAtual.foco}</div>
+          <div style={{display:"flex",gap:sp.sm,flexWrap:"wrap"}}>
+            <Pill>⏱ {treinoAtual.duracao}</Pill>
+            <Pill>🔥 ~{totalKcal}kcal</Pill>
+            <Pill>💪 {treinoAtual.exercicios.length} ex.</Pill>
+          </div>
+        </div>
+        <div style={{background:`${C.success}0A`,borderRadius:r.lg,padding:sp.md,marginBottom:sp.sm,border:`1px solid ${C.success}22`}}>
+          <Label color={C.success}>🔆 AQUECIMENTO</Label>
+          <div style={{fontSize:13,color:C.textSub,lineHeight:1.6}}>{treinoAtual.aquecimento}</div>
+        </div>
+        {treinoAtual.exercicios.map((ex,i)=>(
+          <div key={i} className="tap-scale"
+            onClick={()=>{ setExIdx(i); setVista("ex"); setSel(treinoAtual); }}
+            style={{...cs.card,cursor:"pointer",display:"flex",alignItems:"center",gap:sp.md,borderLeft:`3px solid ${usuario.cor}66`,marginBottom:sp.sm}}>
+            <div style={{width:30,height:30,borderRadius:"50%",background:`${usuario.cor}18`,flexShrink:0,display:"flex",alignItems:"center",justifyContent:"center",fontSize:12,fontWeight:700,color:usuario.cor}}>{i+1}</div>
+            <div style={{flex:1}}>
+              <div style={{fontSize:14,fontWeight:600,marginBottom:2}}>{ex.nome}</div>
+              <div style={{fontSize:11,color:C.textMuted}}>{ex.series}×{ex.reps} · {ex.descanso}s descanso</div>
+              <Pill color={usuario.cor} bg={`${usuario.cor}15`}>{ex.musculo}</Pill>
+            </div>
+            <div style={{textAlign:"right",flexShrink:0}}>
+              <div style={{fontSize:11,color:C.textMuted}}>{ex.kcal*ex.series}kcal</div>
+              <span style={{color:C.textMuted,fontSize:18}}>›</span>
+            </div>
+          </div>
+        ))}
+        <div style={{background:`${C.info}0A`,borderRadius:r.lg,padding:sp.md,marginBottom:sp.lg,border:`1px solid ${C.info}22`}}>
+          <Label color={C.info}>🌙 DESAQUECIMENTO</Label>
+          <div style={{fontSize:13,color:C.textSub,lineHeight:1.6}}>{treinoAtual.desaquecimento}</div>
+        </div>
+        <CardioInline usuario={usuario} med={med}/>
+        <button className="tap-scale"
+          style={{...cs.btn,background:`linear-gradient(135deg,${usuario.cor},${usuario.corEscura})`,marginBottom:80}}
+          onClick={()=>{ setSel(treinoAtual); setExIdx(0); setVista("ex"); }}>
+          ▶ INICIAR TREINO
+        </button>
+      </div>
+    );
+  }
+
+  // Rest day or fallback
   return (
     <div style={cs.screen}>
       <div style={cs.pageHead}>
-        <div style={{fontFamily:font.display,fontSize:34,letterSpacing:4}}>TREINO</div>
+        <div style={{fontFamily:font.display,fontSize:34,letterSpacing:4,marginBottom:2}}>TREINO</div>
+      </div>
+      <div style={{...cs.card,textAlign:"center",padding:sp.xxxl}}>
+        <div style={{fontSize:52,marginBottom:sp.md}}>🛌</div>
+        <div style={{fontFamily:font.display,fontSize:26,letterSpacing:3,marginBottom:sp.sm}}>DESCANSO</div>
+        <div style={{fontSize:13,color:C.textSub,lineHeight:1.6}}>Hoje é dia de recuperação. Descanse bem.</div>
       </div>
       <Spacer h={80}/>
     </div>
