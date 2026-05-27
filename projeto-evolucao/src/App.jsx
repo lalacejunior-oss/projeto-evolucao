@@ -278,6 +278,139 @@ const DIAS   = ["Dom","Seg","Ter","Qua","Qui","Sex","Sáb"];
 const CHAVE_TREINOS = ["A","B","C","D","E"];
 const DIAS_TREINO   = [null,0,1,2,3,null,4]; // dom=null, seg=0, ter=1, qua=2, qui=3, sex=null, sab=4
 
+
+// ════════════════════════════════════════════════════════════════════
+// DESIGN SYSTEM
+// ════════════════════════════════════════════════════════════════════
+
+const sp = { xs:4, sm:8, md:12, lg:16, xl:20, xxl:28, xxxl:40 };
+const r  = { sm:8, md:12, lg:16, xl:20, pill:100 };
+const font = {
+  display: "'Bebas Neue',cursive",
+  body:    "'DM Sans',sans-serif",
+};
+const C = {
+  bg:         "#07071A",
+  surface:    "#0E0E24",
+  surfaceHigh:"#141430",
+  border:     "#1C1C3A",
+  borderHi:   "#2A2A50",
+  text:       "#F0F0FF",
+  textSub:    "#8888AA",
+  textMuted:  "#44445A",
+  success:    "#22C55E",
+  warning:    "#F59E0B",
+  danger:     "#EF4444",
+  info:       "#3B82F6",
+};
+const cs = {
+  label: {
+    fontSize:10, fontWeight:700, letterSpacing:2,
+    textTransform:"uppercase", fontFamily:"'DM Sans',sans-serif",
+  },
+  card: {
+    background:"#0E0E24", borderRadius:20,
+    padding:16, marginBottom:12,
+    border:"1px solid #1C1C3A",
+  },
+  metricBox: {
+    background:"#141430", borderRadius:16,
+    padding:"12px 8px",
+    display:"flex", flexDirection:"column",
+    alignItems:"center", gap:4,
+  },
+  btn: {
+    width:"100%", padding:"16px 0",
+    borderRadius:16, border:"none",
+    color:"#fff", fontWeight:700,
+    fontSize:14, letterSpacing:1.5,
+    cursor:"pointer", display:"block",
+    textAlign:"center", fontFamily:"'DM Sans',sans-serif",
+    marginBottom:12,
+  },
+  btnGhost: {
+    background:"none", border:"none",
+    color:"#8888AA", fontSize:13,
+    cursor:"pointer", padding:"8px 0",
+    display:"block", fontFamily:"'DM Sans',sans-serif",
+    letterSpacing:.5,
+  },
+  screen: {
+    padding:"0 16px",
+    fontFamily:"'DM Sans',sans-serif",
+    minHeight:"100vh",
+  },
+  pageHead: {
+    paddingTop:20, paddingBottom:16,
+  },
+  track: (h=6) => ({
+    background:"#141430", borderRadius:100,
+    height:h, overflow:"hidden",
+  }),
+  fill: (w, bg, h=6) => ({
+    height:`${h}px`, width:`${Math.min(100,Math.max(0,w))}%`,
+    background:bg, borderRadius:100,
+    transition:"width .5s cubic-bezier(.4,0,.2,1)",
+  }),
+};
+
+function ProgressBar({ value, color, height=6, glow=false }) {
+  return (
+    <div style={cs.track(height)}>
+      <div style={{
+        ...cs.fill(value, color, height),
+        boxShadow: glow ? `0 0 8px ${color.includes("gradient") ? "#fff" : color}80` : "none",
+      }}/>
+    </div>
+  );
+}
+
+function Pill({ children, color, bg }) {
+  return (
+    <span style={{
+      display:"inline-flex", alignItems:"center",
+      padding:"3px 10px", borderRadius:100,
+      fontSize:11, fontWeight:600,
+      color: color || "#8888AA",
+      background: bg || "#141430",
+      fontFamily:"'DM Sans',sans-serif",
+      marginRight:4, marginBottom:4,
+    }}>
+      {children}
+    </span>
+  );
+}
+
+function Label({ children, color }) {
+  return (
+    <div style={{...cs.label, color: color || "#44445A", marginBottom:8}}>
+      {children}
+    </div>
+  );
+}
+
+function Metric({ icon, value, label, color, size="md" }) {
+  const valSize = size==="lg"?28:size==="sm"?14:20;
+  return (
+    <div style={cs.metricBox}>
+      {icon && <span style={{fontSize:size==="lg"?22:16}}>{icon}</span>}
+      <span style={{
+        fontFamily:font.display, fontSize:valSize,
+        color: color||C.text, lineHeight:1, letterSpacing:.5,
+      }}>{value}</span>
+      <span style={{fontSize:9,color:C.textMuted,letterSpacing:1,textTransform:"uppercase"}}>{label}</span>
+    </div>
+  );
+}
+
+function Divider() {
+  return <div style={{height:1,background:C.border,margin:`${sp.md}px 0`}}/>;
+}
+
+function Spacer({ h=sp.md }) {
+  return <div style={{height:h}}/>;
+}
+
 // ════════════════════════════════════════════════════════════════════
 // ROOT
 // ════════════════════════════════════════════════════════════════════
@@ -315,17 +448,6 @@ export default function App() {
   );
 }
 
-
-
-// ════════════════════════════════════════════════════════════════════
-// ROOT
-function Divider() {
-  return <div style={{height:1, background:C.border, margin:`${sp.md}px 0`}}/>;
-}
-
-function Spacer({ h=sp.md }) {
-  return <div style={{height:h}}/>;
-}
 
 // ════════════════════════════════════════════════════════════════════
 // SPLASH / LOGIN
