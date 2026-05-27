@@ -649,7 +649,6 @@ function Frame({ usuario, med, tab, setTab, treinos, nutri, onLogout, salvarMedi
   const ABAS = [
     {id:"home",     ic:"⚡", lb:"Início"},
     {id:"treino",   ic:"💪", lb:"Treino"},
-    {id:"cardio",   ic:"🏃", lb:"Cardio"},
     {id:"evolucao", ic:"📈", lb:"Progresso"},
     {id:"pratico",  ic:"🍳", lb:"Comer"},
     {id:"perfil",   ic:"👤", lb:"Perfil"},
@@ -659,8 +658,7 @@ function Frame({ usuario, med, tab, setTab, treinos, nutri, onLogout, salvarMedi
     <div style={{background:C.bg,minHeight:"100vh",maxWidth:480,margin:"0 auto",fontFamily:font.body,color:C.text,position:"relative"}}>
       <div style={{paddingBottom:72}}>
         {tab==="home"     && <Home        usuario={usuario} med={med} treinos={treinos} setTab={setTab} onLogout={onLogout} outro={outro} outroPerfil={outroPerfil}/>}
-        {tab==="treino"   && <Treino      usuario={usuario} treinos={treinos}/>}
-        {tab==="cardio"   && <Cardio      usuario={usuario} med={med}/>}
+        {tab==="treino"   && <Treino      usuario={usuario} treinos={treinos} med={med}/>}
         {tab==="evolucao" && <Evolucao    usuario={usuario} med={med} salvarMedida={salvarMedida}/>}
         {tab==="pratico"  && <AlimPratica usuario={usuario} nutri={nutri}/>}
         {tab==="perfil"   && <Perfil      usuario={usuario} med={med} onLogout={onLogout} outroPerfil={outroPerfil} outroMed={outro}/>}
@@ -920,28 +918,6 @@ function Home({ usuario, med, treinos, setTab, onLogout, outro, outroPerfil }) {
         </div>
       </div>
 
-      {/* ── SEMANA ── */}
-      <div style={{...cs.card,marginBottom:sp.xl}}>
-        <Label>📅 SEMANA</Label>
-        <div style={{display:"flex",gap:5,marginTop:sp.sm}}>
-          {DIAS.map((d,i)=>{
-            const temT = [false,true,true,true,true,false,true][i];
-            const ehHoje = new Date().getDay()===i;
-            return (
-              <div key={d} style={{
-                flex:1, borderRadius:r.md,
-                padding:"8px 0",
-                display:"flex",flexDirection:"column",alignItems:"center",gap:3,
-                background: ehHoje ? `${usuario.cor}18` : C.surfaceHigh,
-                border:`1px solid ${ehHoje?usuario.cor:C.border}`,
-              }}>
-                <span style={{fontSize:9,color:ehHoje?usuario.cor:C.textMuted,fontWeight:ehHoje?700:400}}>{d}</span>
-                <span style={{fontSize:15}}>{temT?"💪":"😴"}</span>
-              </div>
-            );
-          })}
-        </div>
-      </div>
       <Spacer h={80}/>
     </div>
   );
@@ -950,7 +926,7 @@ function Home({ usuario, med, treinos, setTab, onLogout, outro, outroPerfil }) {
 // ════════════════════════════════════════════════════════════════════
 // TREINO
 // ════════════════════════════════════════════════════════════════════
-function Treino({ usuario, treinos }) {
+function Treino({ usuario, treinos, med }) {
   const [vista,  setVista]  = useState("lista");
   const [sel,    setSel]    = useState(null);
   const [exIdx,  setExIdx]  = useState(0);
@@ -1182,6 +1158,9 @@ function Treino({ usuario, treinos }) {
           <div style={{fontSize:13,color:C.textSub,lineHeight:1.6}}>{sel.desaquecimento}</div>
         </div>
 
+        {/* ── CARDIO DO DIA ── */}
+        <CardioInline usuario={usuario} med={med}/>
+
         <button className="tap-scale"
           style={{...cs.btn,background:`linear-gradient(135deg,${usuario.cor},${usuario.corEscura})`,marginBottom:80}}
           onClick={()=>{ setExIdx(0); setVista("ex"); }}>
@@ -1191,65 +1170,44 @@ function Treino({ usuario, treinos }) {
     );
   }
 
-  // ── LIST VIEW ──
+  // ── TODAY VIEW (default) ──
+  // Automatically show today's workout or rest day
+  const diaIdxT = DIAS_TREINO[new Date().getDay()];
+  const treinoHoje2 = diaIdxT !== null ? Object.values(treinos)[diaIdxT] : null;
+
+  // Auto-open today's detail on first render
+  useEffect(() => {
+    if (treinoHoje2 && vista === "lista") {
+      setSel(treinoHoje2);
+      setVista("det");
+    }
+  }, []);
+
+  // Fallback: rest day
+  if (!treinoHoje2) {
+    return (
+      <div style={cs.screen}>
+        <div style={cs.pageHead}>
+          <div style={{fontFamily:font.display,fontSize:34,letterSpacing:4,marginBottom:2}}>TREINO</div>
+        </div>
+        <div style={{...cs.card,textAlign:"center",padding:sp.xxxl}}>
+          <div style={{fontSize:52,marginBottom:sp.md}}>🛌</div>
+          <div style={{fontFamily:font.display,fontSize:26,letterSpacing:3,marginBottom:sp.sm}}>DESCANSO</div>
+          <div style={{fontSize:13,color:C.textSub,lineHeight:1.6}}>
+            Hoje é dia de recuperação. Seu corpo cresce agora.
+          </div>
+        </div>
+        <Spacer h={80}/>
+      </div>
+    );
+  }
+
+  // Loading state while auto-redirect
   return (
     <div style={cs.screen}>
       <div style={cs.pageHead}>
-        <div style={{fontFamily:font.display,fontSize:34,letterSpacing:4,marginBottom:2}}>TREINOS</div>
-        <div style={{fontSize:12,color:C.textMuted}}>{usuario.nome} · {usuario.objetivo}</div>
+        <div style={{fontFamily:font.display,fontSize:34,letterSpacing:4}}>TREINO</div>
       </div>
-
-      {/* divisão semanal resumida */}
-      <div style={{
-        ...cs.card,
-        background:`${usuario.cor}0A`,
-        border:`1px solid ${usuario.cor}22`,
-        marginBottom:sp.lg,
-      }}>
-        <Label color={usuario.cor}>📋 DIVISÃO SEMANAL</Label>
-        <div style={{display:"flex",flexDirection:"column",gap:sp.xs,marginTop:sp.xs}}>
-          {Object.values(treinos).map(t=>(
-            <div key={t.dia} style={{display:"flex",gap:sp.sm,alignItems:"center"}}>
-              <span style={{fontSize:10,color:C.textMuted,minWidth:28,fontWeight:600}}>{t.dia.slice(0,3)}</span>
-              <span style={{fontSize:12,color:C.text}}>{t.nome}</span>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* workout cards */}
-      {Object.values(treinos).map(t=>{
-        const kcal = t.exercicios.reduce((a,e)=>a+e.kcal*e.series,0);
-        return (
-          <div key={t.dia} className="tap-scale"
-            onClick={()=>{ setSel(t); setVista("det"); }}
-            style={{
-              ...cs.card,cursor:"pointer",
-              display:"flex",alignItems:"center",gap:sp.md,
-              marginBottom:sp.sm,
-            }}>
-            <div style={{
-              width:50,height:50,borderRadius:r.lg,
-              background:`${usuario.cor}18`,flexShrink:0,
-              display:"flex",flexDirection:"column",
-              alignItems:"center",justifyContent:"center",
-              gap:1,
-            }}>
-              <div style={{fontFamily:font.display,fontSize:10,color:usuario.cor,letterSpacing:1}}>{t.dia.slice(0,3).toUpperCase()}</div>
-              <span style={{fontSize:18}}>💪</span>
-            </div>
-            <div style={{flex:1}}>
-              <div style={{fontSize:15,fontWeight:600,marginBottom:3}}>{t.nome}</div>
-              <div style={{fontSize:12,color:C.textMuted,marginBottom:sp.xs}}>{t.foco}</div>
-              <div style={{display:"flex",gap:sp.sm}}>
-                <Pill>⏱ {t.duracao}</Pill>
-                <Pill>🔥 ~{kcal}kcal</Pill>
-              </div>
-            </div>
-            <span style={{color:C.textMuted,fontSize:20}}>›</span>
-          </div>
-        );
-      })}
       <Spacer h={80}/>
     </div>
   );
@@ -1318,6 +1276,157 @@ function VideoCard({ vid, nome, cor, corGlow }) {
           <button onClick={()=>setClicado(false)}
             style={{background:"none",border:`1px solid ${C.border}`,borderRadius:r.sm,color:C.textMuted,fontSize:12,cursor:"pointer",padding:"6px 16px",fontFamily:font.body}}>
             ← Fechar
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+
+// ════════════════════════════════════════════════════════════════════
+// CARDIO INLINE — bloco dentro do detalhe do treino
+// ════════════════════════════════════════════════════════════════════
+function CardioInline({ usuario, med }) {
+  const [aberto,     setAberto]  = useState(false);
+  const [tipo,       setTipo]    = useState("caminhada");
+  const [minutos,    setMinutos] = useState(30);
+  const [intensidade,setIntens]  = useState("moderado");
+  const [salvo,      setSalvo]   = useState(false);
+
+  const MET = {
+    caminhada:{ leve:3.5,moderado:4.5,intenso:6.0 },
+    esteira:  { leve:5.0,moderado:7.5,intenso:9.5 },
+    bicicleta:{ leve:4.0,moderado:6.0,intenso:8.5 },
+    escada:   { leve:6.0,moderado:8.5,intenso:11.0 },
+    eliptico: { leve:4.5,moderado:6.5,intenso:8.5 },
+  };
+  const TIPOS = [
+    {id:"caminhada",ic:"🚶",lb:"Caminhada"},
+    {id:"esteira",  ic:"🏃",lb:"Esteira"},
+    {id:"bicicleta",ic:"🚴",lb:"Bicicleta"},
+    {id:"escada",   ic:"🪜",lb:"Escada"},
+    {id:"eliptico", ic:"🔄",lb:"Elíptico"},
+  ];
+
+  const met  = MET[tipo]?.[intensidade] || 5;
+  const kcal = Math.round((met * (med?.peso || 100) * minutos) / 60);
+
+  const salvar = () => {
+    const sessoes = DB.get("cardio_"+usuario.id, []);
+    const nova = {
+      tipo: TIPOS.find(t=>t.id===tipo)?.lb,
+      min: minutos, kcal,
+      data: "Hoje",
+      intensidade: intensidade[0].toUpperCase()+intensidade.slice(1),
+    };
+    DB.set("cardio_"+usuario.id, [nova, ...sessoes.slice(0,19)]);
+    setSalvo(true);
+    setTimeout(() => setAberto(false), 1500);
+  };
+
+  return (
+    <div style={{...cs.card, border:`1px solid ${usuario.cor}22`, marginBottom:sp.md}}>
+      {/* header — toggle */}
+      <button
+        onClick={() => setAberto(a => !a)}
+        style={{
+          width:"100%", background:"none", border:"none",
+          display:"flex", justifyContent:"space-between", alignItems:"center",
+          cursor:"pointer", padding:0, fontFamily:font.body,
+        }}>
+        <div style={{display:"flex",alignItems:"center",gap:sp.sm}}>
+          <span style={{fontSize:22}}>🏃</span>
+          <div style={{textAlign:"left"}}>
+            <div style={{fontSize:14,fontWeight:700,color:C.text}}>Cardio do Dia</div>
+            <div style={{fontSize:11,color:C.textMuted}}>Registrar sessão aeróbica</div>
+          </div>
+        </div>
+        <span style={{
+          color:usuario.cor, fontSize:18,
+          transform: aberto ? "rotate(180deg)" : "rotate(0deg)",
+          transition:"transform .2s",
+          display:"inline-block",
+        }}>▾</span>
+      </button>
+
+      {/* expandable content */}
+      {aberto && (
+        <div style={{marginTop:sp.lg}}>
+          {/* type picker */}
+          <div style={{display:"flex",gap:sp.sm,marginBottom:sp.md,overflowX:"auto",paddingBottom:2}}>
+            {TIPOS.map(t=>(
+              <button key={t.id} className="tap-scale"
+                onClick={()=>setTipo(t.id)}
+                style={{
+                  flexShrink:0,
+                  background: tipo===t.id ? `${usuario.cor}18` : C.surfaceHigh,
+                  border:`1px solid ${tipo===t.id ? usuario.cor : C.border}`,
+                  borderRadius:r.md, padding:"8px 10px",
+                  cursor:"pointer", display:"flex",
+                  flexDirection:"column", alignItems:"center", gap:3,
+                  minWidth:60, transition:"all .15s",
+                }}>
+                <span style={{fontSize:20}}>{t.ic}</span>
+                <span style={{fontSize:9,color:tipo===t.id?usuario.cor:C.textMuted,fontWeight:600}}>{t.lb}</span>
+              </button>
+            ))}
+          </div>
+
+          {/* duration slider */}
+          <div style={{marginBottom:sp.md}}>
+            <div style={{display:"flex",justifyContent:"space-between",marginBottom:sp.sm}}>
+              <Label>⏱ DURAÇÃO</Label>
+              <span style={{fontSize:15,fontWeight:700,color:usuario.cor,fontFamily:font.display}}>{minutos} min</span>
+            </div>
+            <input type="range" min={5} max={90} step={5} value={minutos}
+              onChange={e=>setMinutos(+e.target.value)}
+              style={{width:"100%",accentColor:usuario.cor,cursor:"pointer"}}/>
+            <div style={{display:"flex",justifyContent:"space-between",fontSize:10,color:C.textMuted,marginTop:3}}>
+              <span>5 min</span><span>90 min</span>
+            </div>
+          </div>
+
+          {/* intensity */}
+          <div style={{marginBottom:sp.lg}}>
+            <Label>⚡ INTENSIDADE</Label>
+            <div style={{display:"flex",gap:sp.sm,marginTop:sp.xs}}>
+              {[["leve","🟢"],["moderado","🟡"],["intenso","🔴"]].map(([v,ic])=>(
+                <button key={v} className="tap-scale"
+                  onClick={()=>setIntens(v)}
+                  style={{
+                    flex:1, padding:"10px 0", borderRadius:r.md,
+                    border:`1px solid ${intensidade===v?usuario.cor:C.border}`,
+                    background: intensidade===v
+                      ? `linear-gradient(135deg,${usuario.cor},${usuario.corEscura})`
+                      : C.surfaceHigh,
+                    cursor:"pointer", color:"#fff",
+                    fontSize:11, fontWeight:600,
+                    transition:"all .15s", fontFamily:font.body,
+                  }}>
+                  {ic} {v}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* kcal estimate */}
+          <div style={{
+            background:C.surfaceHigh, borderRadius:r.md,
+            padding:sp.md, textAlign:"center", marginBottom:sp.lg,
+          }}>
+            <span style={{fontFamily:font.display,fontSize:42,color:usuario.cor,letterSpacing:1}}>{kcal}</span>
+            <span style={{fontSize:13,color:C.textMuted}}> kcal estimadas</span>
+          </div>
+
+          <button className="tap-scale" onClick={salvar}
+            style={{
+              ...cs.btn, marginBottom:0,
+              background: salvo
+                ? "linear-gradient(135deg,#16A34A,#14532D)"
+                : `linear-gradient(135deg,${usuario.cor},${usuario.corEscura})`,
+            }}>
+            {salvo ? "✅ Cardio salvo!" : "✓ SALVAR CARDIO"}
           </button>
         </div>
       )}
