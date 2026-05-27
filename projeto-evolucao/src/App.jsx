@@ -56,100 +56,339 @@ const FRASES = [
 // ── EXERCÍCIOS WALLACE ────────────────────────────────────────
 const TREINOS_W = {
   A: {
-    dia: "Segunda", nome: "Peito + Tríceps", foco: "Hipertrofia + Queima",
-    duracao: "55–65 min", kcal: 420,
-    aquecimento: "5 min esteira leve (5 km/h) + 10 rotações de ombro",
-    desaquecimento: "Alongamento peitoral 30s + tríceps 30s cada lado",
-    exercicios: [
-      { nome: "Supino com Halteres", series: 4, reps: "10–12", descanso: 60, musculo: "Peitoral Médio", kcal: 45, vid: "VmB1G1K7v94",
-        exec: "Cotovelos a 45°. Controle a descida por 3s. Não trave no topo.", erro: "Não arquear a lombar nem abrir demais os cotovelos.", resp: "Inspire descendo · Expire subindo." },
-      { nome: "Supino Inclinado Halteres", series: 3, reps: "10–12", descanso: 60, musculo: "Peitoral Superior", kcal: 38, vid: "8iPEnn-ltC8",
-        exec: "Banco a 30–45°. Movimento controlado. Foco na parte alta.", erro: "Não projetar a cabeça para frente.", resp: "Expire no esforço." },
-      { nome: "Crucifixo Inclinado", series: 3, reps: "12–15", descanso: 45, musculo: "Peitoral Superior", kcal: 32, vid: "eozdVDA78K0",
-        exec: "Movimento de abraço. Leve flexão nos cotovelos.", erro: "Não baixar halteres abaixo do ombro.", resp: "Inspire abrindo · Expire fechando." },
-      { nome: "Tríceps Pulley Corda", series: 4, reps: "12–15", descanso: 45, musculo: "Tríceps", kcal: 28, vid: "2-LAMcpzODU",
-        exec: "Cotovelos fixos ao lado. Extensão total. Pause 1s.", erro: "Não mover os cotovelos para frente.", resp: "Expire estendendo." },
-      { nome: "Tríceps Francês", series: 3, reps: "12", descanso: 60, musculo: "Tríceps Longo", kcal: 25, vid: "d_KZxkY_0cM",
-        exec: "Cotovelos apontados para cima. Core estabilizado.", erro: "Não deixar os cotovelos abrirem.", resp: "Inspire descendo · Expire subindo." },
-      { nome: "Cardio – Esteira", series: 1, reps: "15 min", descanso: 0, musculo: "Cardio", kcal: 130, vid: "fNkLpS1q4SY",
-        exec: "Inclinação 3–5%. FC alvo 120–140 bpm.", erro: "Não segurar no corrimão.", resp: "Respiração nasal constante." },
-    ],
-  },
-  B: {
-    dia: "Terça", nome: "Costas + Bíceps", foco: "Força + Definição",
-    duracao: "55–65 min", kcal: 450,
-    aquecimento: "5 min bicicleta + retração escapular 10×",
-    desaquecimento: "Child's pose 40s + alongamento bíceps 30s",
-    exercicios: [
-      { nome: "Puxada Frontal", series: 4, reps: "10–12", descanso: 60, musculo: "Latíssimo do Dorso", kcal: 50, vid: "CAwf7n6Luuc",
-        exec: "Puxe até o queixo. Leve inclinação do tronco.", erro: "Não usar impulso do corpo.", resp: "Expire puxando · Inspire subindo." },
-      { nome: "Remada Curvada Barra", series: 4, reps: "10–12", descanso: 60, musculo: "Costas Médias", kcal: 55, vid: "T3N-TO4reLQ",
-        exec: "Tronco a 45°. Puxe para o umbigo. Escápulas juntas.", erro: "Não arredondar a lombar.", resp: "Expire puxando." },
-      { nome: "Remada Unilateral", series: 3, reps: "12 cada", descanso: 45, musculo: "Dorsais + Romboides", kcal: 40, vid: "pYcpY20QaE8",
-        exec: "Apoio firme no banco. Cotovelo sobe reto.", erro: "Não girar o tronco.", resp: "Expire puxando." },
-      { nome: "Rosca Direta Barra", series: 4, reps: "10–12", descanso: 45, musculo: "Bíceps", kcal: 25, vid: "ykJmrZ5v0Oo",
-        exec: "Cotovelos fixos. Supinação completa no topo.", erro: "Não balançar o corpo.", resp: "Expire subindo." },
-      { nome: "Rosca Martelo", series: 3, reps: "12", descanso: 45, musculo: "Braquial", kcal: 22, vid: "zC3nLlEvin4",
-        exec: "Polegar aponta para cima. Controle total.", erro: "Não pronar o pulso.", resp: "Expire subindo." },
-      { nome: "Prancha", series: 3, reps: "45–60s", descanso: 45, musculo: "Core", kcal: 15, vid: "pSHjTRCQxIw",
-        exec: "Corpo reto. Contraia glúteos e abdômen.", erro: "Não elevar o quadril.", resp: "Respiração lenta e controlada." },
-    ],
-  },
-  C: {
-    dia: "Quarta", nome: "Pernas + Glúteos", foco: "Queima Máxima",
-    duracao: "60–70 min", kcal: 520,
-    aquecimento: "5 min esteira + agachamento livre sem carga 10×",
-    desaquecimento: "Alongamento quadríceps + posterior 40s cada",
-    exercicios: [
-      { nome: "Agachamento Livre", series: 4, reps: "10–12", descanso: 90, musculo: "Quadríceps + Glúteos", kcal: 80, vid: "ultWZbUMPL8",
-        exec: "Pés na largura dos ombros. Desça até 90°. Joelhos alinhados.", erro: "Não deixar joelhos colapsarem para dentro.", resp: "Inspire descendo · Expire subindo." },
-      { nome: "Leg Press 45°", series: 4, reps: "12–15", descanso: 60, musculo: "Quadríceps + Glúteos", kcal: 65, vid: "IZxyjW7MPJQ",
-        exec: "Pés na largura do ombro. Não trave os joelhos.", erro: "Não descolar o lombar do banco.", resp: "Expire empurrando." },
-      { nome: "Stiff com Halteres", series: 3, reps: "12", descanso: 60, musculo: "Posterior + Glúteos", kcal: 55, vid: "1uDiW5--rAE",
-        exec: "Pernas levemente flexionadas. Sinta o alongamento.", erro: "Não arredondar a coluna.", resp: "Inspire descendo · Expire subindo." },
-      { nome: "Cadeira Extensora", series: 3, reps: "15", descanso: 45, musculo: "Quadríceps", kcal: 35, vid: "YyvSfVjQeL0",
-        exec: "Pause 1s no topo. Controle a descida.", erro: "Não usar impulso para subir.", resp: "Expire estendendo." },
-      { nome: "Panturrilha em Pé", series: 4, reps: "15–20", descanso: 45, musculo: "Gastrocnêmio", kcal: 20, vid: "gwLzBJYoWlI",
-        exec: "Amplitude máxima. Pause 1s no topo.", erro: "Não quicar na descida.", resp: "Expire subindo." },
-    ],
-  },
-  D: {
-    dia: "Quinta", nome: "Ombros + Core", foco: "Definição + Condicionamento",
+    dia: "Segunda", nome: "Peito + Tríceps", foco: "Força · Hipertrofia · Gasto Moderado",
     duracao: "55–65 min", kcal: 430,
-    aquecimento: "5 min elíptico + rotação de ombros 10× cada",
-    desaquecimento: "Alongamento ombros + pescoço 30s cada",
+    aquecimento: "5 min esteira inclinação 2% velocidade 5 km/h + 10 rotações de ombro cada lado",
+    desaquecimento: "Alongamento de peitoral na parede 30s + tríceps atrás da cabeça 30s cada lado",
     exercicios: [
-      { nome: "Desenvolvimento Halteres", series: 4, reps: "10–12", descanso: 60, musculo: "Deltóide", kcal: 45, vid: "HzIiNhHhhtA",
-        exec: "Não arquear a lombar. Suba até quase tocar.", erro: "Não inclinar o tronco para trás.", resp: "Expire empurrando." },
-      { nome: "Elevação Lateral", series: 4, reps: "12–15", descanso: 45, musculo: "Deltóide Lateral", kcal: 30, vid: "3VcKaXpzqRo",
-        exec: "Suba até a linha do ombro. Cotovelos levemente fletidos.", erro: "Não usar impulso.", resp: "Expire subindo." },
-      { nome: "Elevação Frontal", series: 3, reps: "12", descanso: 45, musculo: "Deltóide Anterior", kcal: 25, vid: "sOoBPJI_mpo",
-        exec: "Alternado. Não ultrapasse a linha do ombro.", erro: "Não balançar o tronco.", resp: "Expire subindo." },
-      { nome: "Prancha Lateral", series: 3, reps: "30s cada", descanso: 45, musculo: "Oblíquos", kcal: 15, vid: "K2eTGFtHILQ",
-        exec: "Quadril alinhado. Não deixe afundar.", erro: "Não rodar o quadril para frente.", resp: "Respiração controlada." },
-      { nome: "Abdominal Crunch", series: 3, reps: "20", descanso: 45, musculo: "Abdômen", kcal: 12, vid: "Xyd_fa5zoEU",
-        exec: "Não puxe o pescoço. Olhe para o teto.", erro: "Não usar impulso das mãos.", resp: "Expire subindo." },
-      { nome: "Bicicleta Ergométrica", series: 1, reps: "15 min", descanso: 0, musculo: "Cardio", kcal: 140, vid: "oHvHGGGHjnE",
-        exec: "Nível 5–7. 70–80 rpm. FC alvo 120–140.", erro: "Não se curvar demais.", resp: "Cadência estável." },
+      {
+        nome: "Supino Máquina (ou Halteres)", series: 3, reps: "8–12", descanso: 75,
+        musculo: "Peitoral", kcal: 48, vid: "VmB1G1K7v94",
+        exec: "Cotovelos a 45–60° do corpo. Controle a descida em 3s. Pause leve no peito. Empurre de forma explosiva mas controlada.",
+        erro: "Não arquear excessivamente a lombar. Não deixar ombros elevarem na subida.",
+        resp: "Inspire na descida · Expire no esforço (subida).",
+        carga: "Carga onde as últimas 2 reps sejam difíceis mas técnica perfeita. Comece com 70% do máximo.",
+        progressao: "Semana 1–2: domine a técnica. Semana 3–4: aumente 2–3kg por semana se completar todas as reps."
+      },
+      {
+        nome: "Supino Inclinado Halteres", series: 3, reps: "10–12", descanso: 75,
+        musculo: "Peitoral Superior", kcal: 40, vid: "8iPEnn-ltC8",
+        exec: "Banco a 30–40°. Halteres alinhados com o meio do peitoral. Desça controlado até sentir alongamento.",
+        erro: "Não usar ângulo acima de 45° — ativa mais deltóide que peitoral. Não soltar os ombros para trás.",
+        resp: "Inspire descendo · Expire subindo.",
+        carga: "5–10kg mais leve que o supino plano. Foco em sentir o peitoral superior.",
+        progressao: "Aumente 2kg quando conseguir 12 reps nas 3 séries com boa técnica."
+      },
+      {
+        nome: "Crucifixo Máquina (ou Peck Deck)", series: 3, reps: "12–15", descanso: 60,
+        musculo: "Peitoral — Isolador", kcal: 30, vid: "eozdVDA78K0",
+        exec: "Movimento de abraço. Leve flexão no cotovelo. Foque na contração no centro do peito. Pause 1s no fechamento.",
+        erro: "Não abrir demais os braços para trás — risco de lesão no ombro. Não usar carga pesada neste exercício.",
+        resp: "Inspire abrindo · Expire fechando.",
+        carga: "Leve a moderada. É isolador — aqui o foco é sentir, não carregar.",
+        progressao: "Mantenha a carga e aumente apenas quando dominar a contração."
+      },
+      {
+        nome: "Tríceps Corda (Pulley)", series: 3, reps: "12–15", descanso: 60,
+        musculo: "Tríceps", kcal: 28, vid: "2-LAMcpzODU",
+        exec: "Cotovelos colados ao tronco o tempo todo. Extensão completa abrindo a corda ao final. Pause 1s na extensão.",
+        erro: "Não projetar os cotovelos para frente. Não usar o corpo para ajudar.",
+        resp: "Expire na extensão · Inspire voltando.",
+        carga: "Moderada — priorize a contração do tríceps, não a carga.",
+        progressao: "Aumente quando completar 15 reps com pausa nas 3 séries."
+      },
+      {
+        nome: "Tríceps Francês (Testa) Haltere", series: 3, reps: "10–12", descanso: 60,
+        musculo: "Tríceps Longo", kcal: 25, vid: "d_KZxkY_0cM",
+        exec: "Deitado no banco. Cotovelos apontados para o teto. Desça o haltere até próximo à testa. Suba com força.",
+        erro: "Não abrir os cotovelos para os lados. Não usar peso pesado — preserve o cotovelo.",
+        resp: "Inspire descendo · Expire subindo.",
+        carga: "Leve. Este exercício isola a cabeça longa do tríceps — carga errada lesiona o cotovelo.",
+        progressao: "Domine a amplitude antes de adicionar carga."
+      },
+      {
+        nome: "Caminhada Esteira Inclinada", series: 1, reps: "15–20 min", descanso: 0,
+        musculo: "Cardio", kcal: 140, vid: "fNkLpS1q4SY",
+        exec: "Inclinação 4–6%. Velocidade 5–6 km/h. Frequência cardíaca alvo: 115–135 bpm. Postura ereta.",
+        erro: "Não segurar no corrimão — perde todo o benefício. Não correr — o objetivo é caminhar com inclinação.",
+        resp: "Respiração nasal sempre que possível. Constante e ritmada.",
+        carga: "Sem peso adicional. A inclinação é o estímulo.",
+        progressao: "Semana 1: 15 min. Semana 2–3: 18 min. Semana 4+: 20 min ou aumente a inclinação."
+      },
     ],
   },
-  E: {
-    dia: "Sábado", nome: "Full Body + HIIT", foco: "Queima Total",
-    duracao: "60–70 min", kcal: 580,
-    aquecimento: "5 min esteira + mobilidade articular completa",
-    desaquecimento: "Alongamento full body 10 min",
+
+  B: {
+    dia: "Terça", nome: "Costas + Bíceps", foco: "Força Dorsal · Postura · Hipertrofia",
+    duracao: "55–65 min", kcal: 460,
+    aquecimento: "5 min bike ergométrica leve + retração escapular 10× + mobilidade de ombro",
+    desaquecimento: "Alongamento costas em pé (abraçar o joelho) 30s cada + bíceps 30s cada",
     exercicios: [
-      { nome: "Agachamento com Salto", series: 3, reps: "10", descanso: 60, musculo: "Pernas + Cardio", kcal: 55, vid: "CVaEhXotL7M",
-        exec: "Aterrisse suavemente com joelhos flexionados.", erro: "Não cair com joelhos em valgo.", resp: "Expire no salto." },
-      { nome: "Flexão de Braço", series: 3, reps: "8–10", descanso: 60, musculo: "Peito + Tríceps", kcal: 35, vid: "IODxDxX7oi4",
-        exec: "Corpo reto. Pode usar inclinação no banco.", erro: "Não deixar o quadril afundar.", resp: "Expire empurrando." },
-      { nome: "Mountain Climber", series: 3, reps: "20 cada", descanso: 45, musculo: "Core + Cardio", kcal: 45, vid: "nmwgirgXLYM",
-        exec: "Quadril alinhado. Ritmo progressivo.", erro: "Não elevar o quadril.", resp: "Respiração rítmica." },
-      { nome: "Esteira – HIIT", series: 1, reps: "20 min", descanso: 0, musculo: "Cardio Total", kcal: 200, vid: "fNkLpS1q4SY",
-        exec: "2 min caminhada / 1 min corrida leve. Repita 6×.", erro: "Não começar no ritmo máximo.", resp: "Respire pelo nariz sempre que possível." },
+      {
+        nome: "Puxada Frontal (Lat Pulldown)", series: 3, reps: "8–12", descanso: 75,
+        musculo: "Latíssimo do Dorso", kcal: 52, vid: "CAwf7n6Luuc",
+        exec: "Pegada um pouco além da largura dos ombros. Puxe até o queixo. Leve inclinação do tronco para trás (não exagere). Sinta o latíssimo no topo.",
+        erro: "Não balançar o corpo. Não puxar para trás da cabeça — risco cervical.",
+        resp: "Expire puxando · Inspire subindo.",
+        carga: "Comece com 60% do seu peso corporal como referência inicial.",
+        progressao: "Quando completar 12 reps limpas, adicione 5kg na próxima semana."
+      },
+      {
+        nome: "Remada Baixa (Cabo ou Máquina)", series: 3, reps: "10–12", descanso: 75,
+        musculo: "Costas Médias · Romboides", kcal: 50, vid: "T3N-TO4reLQ",
+        exec: "Sente ereto. Puxe para o umbigo. Escápulas juntas no final. Pause 1–2s no final da remada. Volte controlado.",
+        erro: "Não arredondar a lombar ao voltar. Não usar impulso do tronco.",
+        resp: "Expire puxando · Inspire voltando.",
+        carga: "Carga que permita sentir a contração dorsal — não apenas os braços.",
+        progressao: "Aumente 5kg quando completar 12 reps com pausa em todas as séries."
+      },
+      {
+        nome: "Remada Unilateral Haltere", series: 3, reps: "10–12 cada", descanso: 60,
+        musculo: "Dorsais · Romboide · Bíceps", kcal: 42, vid: "pYcpY20QaE8",
+        exec: "Apoio firme no banco (joelho + mão). Puxe o cotovelo em linha reta para cima. Sinta a escápula retraindo no topo.",
+        erro: "Não rodar o tronco para cima. Não usar o ombro para finalizar o movimento.",
+        resp: "Expire puxando · Inspire descendo.",
+        carga: "Moderada. Um lado de cada vez permite mais isolamento.",
+        progressao: "Aumente quando fazer 12 reps com contração clara em todos."
+      },
+      {
+        nome: "Pullover Máquina (ou Haltere)", series: 3, reps: "12–15", descanso: 60,
+        musculo: "Serrátil · Dorsal", kcal: 35, vid: "SIbIOLnMRbE",
+        exec: "Braços levemente fletidos. Movimento amplo de cima para baixo. Sinta o alongamento no dorsal no topo.",
+        erro: "Não dobrar excessivamente os cotovelos. Não usar carga pesada — perde o arco.",
+        resp: "Inspire no topo (alongamento) · Expire descendo.",
+        carga: "Leve a moderada. Exercício de isolamento do dorsal.",
+        progressao: "Foco em amplitude antes de carga."
+      },
+      {
+        nome: "Rosca Direta Barra (ou Halteres)", series: 3, reps: "10–12", descanso: 60,
+        musculo: "Bíceps Braquial", kcal: 27, vid: "ykJmrZ5v0Oo",
+        exec: "Cotovelos fixos ao lado do corpo. Supinação total no topo (palma para cima e para fora). Desça controlado.",
+        erro: "Não balançar o tronco para frente. Não deixar cotovelos irem para frente.",
+        resp: "Expire subindo · Inspire descendo.",
+        carga: "Moderada — priorize a amplitude e a supinação.",
+        progressao: "Aumente 2kg quando completar 12 reps em todas as séries."
+      },
+      {
+        nome: "Rosca Martelo Halteres", series: 3, reps: "10–12 cada", descanso: 60,
+        musculo: "Braquial · Braquiorradial", kcal: 24, vid: "zC3nLlEvin4",
+        exec: "Polegar para cima o tempo todo. Suba alternado ou juntos. Cotovelos fixos. Mais grossura no braço.",
+        erro: "Não virar a mão (não vira para fora como na rosca direta).",
+        resp: "Expire subindo · Inspire descendo.",
+        carga: "Similar à rosca direta ou levemente mais pesado.",
+        progressao: "Aumente junto com a rosca direta."
+      },
+    ],
+  },
+
+  C: {
+    dia: "Quarta", nome: "Pernas Completo", foco: "Força · Volume · Recuperação Respeitada",
+    duracao: "60–70 min", kcal: 510,
+    aquecimento: "5 min esteira leve + 10 agachamentos sem peso + mobilidade de quadril",
+    desaquecimento: "Alongamento de quadríceps em pé 40s cada + posterior de coxa deitado 40s",
+    exercicios: [
+      {
+        nome: "Agachamento Livre (ou Hack Squat)", series: 3, reps: "8–10", descanso: 90,
+        musculo: "Quadríceps · Glúteos · Core", kcal: 82, vid: "ultWZbUMPL8",
+        exec: "Pés na largura dos ombros, levemente abertos. Desça até a coxa paralela ao chão. Joelhos seguem a direção dos pés. Suba empurrando o chão.",
+        erro: "Não deixar os joelhos colapsarem para dentro. Não dobrar a lombar (mantenha o peito para cima). Não subir nos calcanhares.",
+        resp: "Inspire descendo · Expire subindo com força.",
+        carga: "125kg: comece com barra + 20–30kg. Priorize profundidade e técnica.",
+        progressao: "Adicione 5kg por semana enquanto a técnica estiver perfeita."
+      },
+      {
+        nome: "Leg Press 45°", series: 3, reps: "10–12", descanso: 75,
+        musculo: "Quadríceps · Glúteos", kcal: 68, vid: "IZxyjW7MPJQ",
+        exec: "Pés na largura dos ombros na plataforma. Desça até joelhos formarem 90°. Não trave os joelhos no topo. Empurre de forma uniforme.",
+        erro: "Não descolar o lombar do banco (indica que desce demais). Não deixar os joelhos irem muito para dentro.",
+        resp: "Inspire descendo · Expire empurrando.",
+        carga: "Você consegue usar carga significativa aqui — máquina guiada é mais segura.",
+        progressao: "Aumente 10kg por semana quando completar 12 reps limpas."
+      },
+      {
+        nome: "Stiff (Terra Romeno) Halteres", series: 3, reps: "10–12", descanso: 75,
+        musculo: "Posterior de Coxa · Glúteos", kcal: 58, vid: "1uDiW5--rAE",
+        exec: "Pernas levemente flexionadas. Incline o tronco mantendo as costas retas. Sinta o alongamento no posterior. Empurre o quadril para frente na subida.",
+        erro: "Não arredondar a coluna lombar — é a causa principal de lesão. Não descer abaixo da linha onde perde a postura.",
+        resp: "Inspire descendo · Expire subindo.",
+        carga: "Moderada. O foco é sentir o posterior, não carregar peso máximo.",
+        progressao: "Aumente apenas quando a técnica estiver sólida."
+      },
+      {
+        nome: "Mesa Flexora (Cadeira Flexora)", series: 3, reps: "12–15", descanso: 60,
+        musculo: "Posterior de Coxa — Isolador", kcal: 32, vid: "1Tq3QdYUuHs",
+        exec: "Movimento lento e controlado nos dois sentidos. Pause 1s no pico de contração. Não use impulso.",
+        erro: "Não elevar o quadril da máquina. Não soltar rápido na volta — a fase excêntrica também constrói músculo.",
+        resp: "Expire flexionando · Inspire voltando.",
+        carga: "Moderada. Isolador — não exija muito do tendão da coxa.",
+        progressao: "Aumente 5kg quando completar 15 reps com pausa."
+      },
+      {
+        nome: "Cadeira Extensora", series: 3, reps: "12–15", descanso: 60,
+        musculo: "Quadríceps — Isolador", kcal: 35, vid: "YyvSfVjQeL0",
+        exec: "Pause 1–2s no topo (extensão total). Desça controlado em 2–3s. Não use impulso para subir.",
+        erro: "Não usar peso excessivo — sobrecarga no tendão patelar. Atenção especial se houver desconforto no joelho.",
+        resp: "Expire subindo · Inspire descendo.",
+        carga: "Leve a moderada. Priorize a qualidade da contração.",
+        progressao: "Mantenha carga constante e aumente a velocidade de contração com o tempo."
+      },
+      {
+        nome: "Panturrilha em Pé (Máquina ou Livre)", series: 3, reps: "15–20", descanso: 45,
+        musculo: "Gastrocnêmio · Sóleo", kcal: 22, vid: "gwLzBJYoWlI",
+        exec: "Amplitude total — calcanhares abaixo do nível da plataforma. Pause 1–2s no topo na ponta do pé. Desça totalmente.",
+        erro: "Não fazer movimento parcial (mini bounces). Amplitude completa é obrigatória.",
+        resp: "Expire subindo · Inspire descendo.",
+        carga: "Panturrilha suporta bem carga. Use moderado a pesado mas com amplitude.",
+        progressao: "Aumente quando fizer 20 reps com pausa total nas 3 séries."
+      },
+      {
+        nome: "Caminhada Esteira Inclinada", series: 1, reps: "15–20 min", descanso: 0,
+        musculo: "Cardio", kcal: 145, vid: "fNkLpS1q4SY",
+        exec: "Inclinação 4–6%. Velocidade 5–5.5 km/h. FC 115–135 bpm. Postura ereta — não segure o corrimão.",
+        erro: "Não correr após treino de perna pesado — risco de lesão articular. A caminhada inclinada é o cardio ideal aqui.",
+        resp: "Respiração constante e nasal.",
+        carga: "Sem peso adicional.",
+        progressao: "Aumente o tempo ou a inclinação progressivamente."
+      },
+    ],
+  },
+
+  D: {
+    dia: "Quinta", nome: "Ombros + Abdômen", foco: "Estabilidade · Condicionamento · Força",
+    duracao: "55–65 min", kcal: 420,
+    aquecimento: "5 min elíptico + rotação de ombros 10× cada direção + pendulares",
+    desaquecimento: "Alongamento de ombros cruzado 30s cada + pescoço lateral 20s cada",
+    exercicios: [
+      {
+        nome: "Desenvolvimento Máquina (ou Halteres)", series: 3, reps: "10–12", descanso: 75,
+        musculo: "Deltóide Anterior · Médio", kcal: 46, vid: "HzIiNhHhhtA",
+        exec: "Sente ereto, lombar neutra. Empurre até quase travar sem trancar. Controle a descida até a altura dos ombros.",
+        erro: "Não arquear a lombar para compensar. Não descer abaixo da linha dos ombros — sobrecarga no manguito.",
+        resp: "Expire subindo · Inspire descendo.",
+        carga: "Moderada. Ombro é articulação delicada — não force carga.",
+        progressao: "Aumente 2–3kg quando completar 12 reps limpas."
+      },
+      {
+        nome: "Elevação Lateral Halteres", series: 3, reps: "12–15", descanso: 60,
+        musculo: "Deltóide Lateral", kcal: 30, vid: "3VcKaXpzqRo",
+        exec: "Cotovelos levemente fletidos. Suba até a linha do ombro — não acima. Punho levemente inclinado para baixo (como despejando água). Controle total.",
+        erro: "Não balançar o corpo. Não subir acima do ombro — comprime o manguito rotador.",
+        resp: "Expire subindo · Inspire descendo.",
+        carga: "Leve a moderada. É isolador — 8–12kg é suficiente para maioria.",
+        progressao: "Aumente apenas quando a técnica for perfeita — erros aqui causam lesão."
+      },
+      {
+        nome: "Crucifixo Inverso (Posterior do Ombro)", series: 3, reps: "12–15", descanso: 60,
+        musculo: "Deltóide Posterior · Romboides", kcal: 27, vid: "sOoBPJI_mpo",
+        exec: "Incline o tronco ou use peck deck invertido. Abra os braços para os lados mantendo leve flexão no cotovelo. Sinta a parte posterior do ombro.",
+        erro: "Não usar impulso. Não elevar os ombros durante o movimento.",
+        resp: "Expire abrindo · Inspire fechando.",
+        carga: "Muito leve. Músculo pequeno, fácil de sobrecarregar.",
+        progressao: "Volume antes de carga aqui."
+      },
+      {
+        nome: "Encolhimento Halteres (Trapézio)", series: 3, reps: "12–15", descanso: 60,
+        musculo: "Trapézio Superior", kcal: 20, vid: "cJRVVxmytaM",
+        exec: "Suba os ombros em linha reta — não em círculo. Pause 1–2s no topo. Desça totalmente.",
+        erro: "Não rodar os ombros em círculo — risco de impacto no ombro. Movimento é vertical.",
+        resp: "Expire subindo · Inspire descendo.",
+        carga: "Moderada a pesada — trapézio suporta bem carga.",
+        progressao: "Aumente quando fazer 15 reps com pausa total."
+      },
+      {
+        nome: "Abdominal Máquina (ou Solo)", series: 3, reps: "15–20", descanso: 45,
+        musculo: "Reto Abdominal", kcal: 15, vid: "Xyd_fa5zoEU",
+        exec: "Contraia o abdômen antes de mover. Não puxe o pescoço. Expire totalmente ao contrair.",
+        erro: "Não usar impulso. Não depender do pescoço — é o abdômen que deve trabalhar.",
+        resp: "Expire contraindo forte · Inspire voltando.",
+        carga: "Se usar máquina: leve a moderada.",
+        progressao: "Aumente reps antes de carga."
+      },
+      {
+        nome: "Prancha Frontal", series: 3, reps: "30–45s", descanso: 45,
+        musculo: "Core Profundo · Oblíquos", kcal: 14, vid: "pSHjTRCQxIw",
+        exec: "Apoio nos antebraços. Corpo reto da cabeça ao calcanhar. Contraia abdômen, glúteos e quadríceps ao mesmo tempo. Não deixe o quadril cair nem subir.",
+        erro: "Não prender a respiração. Não elevar o quadril para facilitar.",
+        resp: "Respiração lenta e profunda durante toda a prancha.",
+        carga: "Sem peso. Progrida em tempo.",
+        progressao: "Semana 1: 30s. Semana 2: 35s. Semana 3: 40s. Semana 4: 45s."
+      },
+      {
+        nome: "Bike Ergométrica", series: 1, reps: "15–20 min", descanso: 0,
+        musculo: "Cardio", kcal: 130, vid: "oHvHGGGHjnE",
+        exec: "Nível 5–8. Cadência 70–80 rpm. FC 115–135 bpm. Postura ereta, não se curve demais para frente.",
+        erro: "Não usar nível muito fácil — perde o benefício cardio. Não usar nível pesado demais — compensação na postura.",
+        resp: "Respiração rítmica e constante.",
+        carga: "Nível progressivo conforme condicionamento melhora.",
+        progressao: "Aumente 5 min por semana até chegar a 20 min."
+      },
+    ],
+  },
+
+  E: {
+    dia: "Sexta", nome: "Upper Metabólico + Cardio", foco: "Gasto Calórico · Metabolismo · Resistência",
+    duracao: "55–65 min", kcal: 470,
+    aquecimento: "5 min caminhada + mobilidade geral dos ombros e coluna",
+    desaquecimento: "Alongamento full upper — peito, ombro, costas, bíceps — 30s cada",
+    exercicios: [
+      {
+        nome: "Supino Leve Halteres", series: 3, reps: "12–15", descanso: 60,
+        musculo: "Peitoral · Tríceps", kcal: 38, vid: "VmB1G1K7v94",
+        exec: "Carga 20–30% menor que segunda. Movimento controlado. Foco na contração — não na carga.",
+        erro: "Não tentar maximizar carga no final da semana — músculos já desgastados.",
+        resp: "Expire subindo · Inspire descendo.",
+        carga: "70–80% da carga usada na segunda.",
+        progressao: "Manter constante. Este treino é metabólico, não de força máxima."
+      },
+      {
+        nome: "Puxada Frontal Leve", series: 3, reps: "12–15", descanso: 60,
+        musculo: "Dorsais · Bíceps", kcal: 44, vid: "CAwf7n6Luuc",
+        exec: "Mesma técnica da terça. Carga reduzida. Foco em amplitude e contração.",
+        erro: "Não tentar bater record de carga — dia de volume e gasto, não de força.",
+        resp: "Expire puxando · Inspire subindo.",
+        carga: "70–80% da carga da terça.",
+        progressao: "Constante. Pode aumentar levemente conforme condicionamento melhora."
+      },
+      {
+        nome: "Rosca Direta Halteres (alternada)", series: 3, reps: "12–15 cada", descanso: 60,
+        musculo: "Bíceps", kcal: 24, vid: "ykJmrZ5v0Oo",
+        exec: "Alternado. Mantenha o cotovelo fixo. Supinação total. Movimento mais rápido que na terça mas ainda controlado.",
+        erro: "Não balançar o corpo mesmo com carga leve.",
+        resp: "Expire subindo · Inspire descendo.",
+        carga: "60–70% da carga da terça.",
+        progressao: "Manter. É volume, não intensidade."
+      },
+      {
+        nome: "Tríceps Corda (Pulley)", series: 3, reps: "12–15", descanso: 60,
+        musculo: "Tríceps", kcal: 25, vid: "2-LAMcpzODU",
+        exec: "Mesma técnica de segunda. Carga reduzida. Pause 1s na extensão.",
+        erro: "Não eliminar a pausa só porque a carga é menor.",
+        resp: "Expire estendendo · Inspire voltando.",
+        carga: "70% da carga de segunda.",
+        progressao: "Constante ao longo das semanas."
+      },
+      {
+        nome: "Elevação Lateral (drop set leve)", series: 3, reps: "15", descanso: 45,
+        musculo: "Deltóide Lateral", kcal: 22, vid: "3VcKaXpzqRo",
+        exec: "Descanso curto entre séries. Foco em queima metabólica. Técnica igual à quinta mas mais rápido.",
+        erro: "Não compensar a velocidade com erros de postura.",
+        resp: "Respiração rítmica.",
+        carga: "Leve — 70% do usado na quinta.",
+        progressao: "Constante."
+      },
+      {
+        nome: "Elíptico ou Caminhada Inclinada", series: 1, reps: "20–30 min", descanso: 0,
+        musculo: "Cardio", kcal: 200, vid: "fNkLpS1q4SY",
+        exec: "Elíptico: nível 5–7, ritmo constante, FC 120–140 bpm. Caminhada: inclinação 5–8%, velocidade 5–6 km/h.",
+        erro: "Não usar HIIT ou corrida — final de semana, recuperação é prioridade.",
+        resp: "Respiração constante e controlada.",
+        carga: "Sem peso adicional.",
+        progressao: "Semana 1: 20 min. Semana 3: 25 min. Semana 6: 30 min."
+      },
     ],
   },
 };
+
 
 // ── EXERCÍCIOS SUELLEN ────────────────────────────────────────
 const TREINOS_S = {
@@ -773,15 +1012,27 @@ function Treino({ usuario, treinos, med }) {
         {/* tips */}
         <div style={{display:"flex",flexDirection:"column",gap:sp.sm,marginBottom:sp.lg}}>
           {[
-            {ic:"⚡",lbl:"EXECUÇÃO",cor:C.ok,  bg:`${C.ok}0A`,  txt:ex.exec},
-            {ic:"⚠️",lbl:"ERROS",   cor:C.danger,bg:`${C.danger}0A`,txt:ex.erro},
-            {ic:"🫁",lbl:"RESPIRAÇÃO",cor:C.info,bg:`${C.info}0A`,txt:ex.resp},
+            {ic:"⚡",lbl:"EXECUÇÃO",     cor:C.ok,    bg:`${C.ok}0A`,    txt:ex.exec},
+            {ic:"⚠️",lbl:"ERROS COMUNS", cor:C.danger,bg:`${C.danger}0A`,txt:ex.erro},
+            {ic:"🫁",lbl:"RESPIRAÇÃO",   cor:C.info,  bg:`${C.info}0A`,  txt:ex.resp},
           ].map(d => (
             <div key={d.lbl} style={{background:d.bg,borderRadius:rad.lg,padding:sp.md,border:`1px solid ${d.cor}20`}}>
               <div style={{fontSize:10,color:d.cor,fontWeight:700,letterSpacing:1.5,marginBottom:4}}>{d.ic} {d.lbl}</div>
               <p style={{fontSize:13,color:C.sub,margin:0,lineHeight:1.65}}>{d.txt}</p>
             </div>
           ))}
+          {ex.carga && (
+            <div style={{background:"#F59E0B0A",borderRadius:rad.lg,padding:sp.md,border:"1px solid #F59E0B20"}}>
+              <div style={{fontSize:10,color:C.warn,fontWeight:700,letterSpacing:1.5,marginBottom:4}}>🏋️ SUGESTÃO DE CARGA</div>
+              <p style={{fontSize:13,color:C.sub,margin:0,lineHeight:1.65}}>{ex.carga}</p>
+            </div>
+          )}
+          {ex.progressao && (
+            <div style={{background:"#22C55E0A",borderRadius:rad.lg,padding:sp.md,border:"1px solid #22C55E20"}}>
+              <div style={{fontSize:10,color:C.ok,fontWeight:700,letterSpacing:1.5,marginBottom:4}}>📈 PROGRESSÃO</div>
+              <p style={{fontSize:13,color:C.sub,margin:0,lineHeight:1.65}}>{ex.progressao}</p>
+            </div>
+          )}
         </div>
 
         {/* sets tracker */}
