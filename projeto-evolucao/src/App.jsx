@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef } from "react";
 
 /* ═══════════════════════════════════════════════════════════════
    PROJETO EVOLUÇÃO — App Pessoal de Academia
@@ -276,147 +276,72 @@ const rnd    = a => a[Math.floor(Math.random()*a.length)];
 const hoje   = () => new Date().toLocaleDateString("pt-BR",{weekday:"long",day:"2-digit",month:"long"});
 const DIAS   = ["Dom","Seg","Ter","Qua","Qui","Sex","Sáb"];
 const CHAVE_TREINOS = ["A","B","C","D","E"];
-const DIAS_TREINO   = [null,0,1,2,3,null,4]; // dom=null, seg=0, ter=1, qua=2, qui=3, sex=null, sab=4
-
-
+const DIAS_TREINO   = [null,0,1,2,3,null,4];
 // ════════════════════════════════════════════════════════════════════
 // DESIGN SYSTEM
 // ════════════════════════════════════════════════════════════════════
-
-const sp = { xs:4, sm:8, md:12, lg:16, xl:20, xxl:28, xxxl:40 };
-const r  = { sm:8, md:12, lg:16, xl:20, pill:100 };
-const font = {
-  display: "'Bebas Neue',cursive",
-  body:    "'DM Sans',sans-serif",
-};
-const C = {
-  bg:         "#07071A",
-  surface:    "#0E0E24",
-  surfaceHigh:"#141430",
-  border:     "#1C1C3A",
-  borderHi:   "#2A2A50",
-  text:       "#F0F0FF",
-  textSub:    "#8888AA",
-  textMuted:  "#44445A",
-  success:    "#22C55E",
-  warning:    "#F59E0B",
-  danger:     "#EF4444",
-  info:       "#3B82F6",
-};
-const cs = {
-  label: {
-    fontSize:10, fontWeight:700, letterSpacing:2,
-    textTransform:"uppercase", fontFamily:"'DM Sans',sans-serif",
-  },
-  card: {
-    background:"#0E0E24", borderRadius:20,
-    padding:16, marginBottom:12,
-    border:"1px solid #1C1C3A",
-  },
-  metricBox: {
-    background:"#141430", borderRadius:16,
-    padding:"12px 8px",
-    display:"flex", flexDirection:"column",
-    alignItems:"center", gap:4,
-  },
-  btn: {
-    width:"100%", padding:"16px 0",
-    borderRadius:16, border:"none",
-    color:"#fff", fontWeight:700,
-    fontSize:14, letterSpacing:1.5,
-    cursor:"pointer", display:"block",
-    textAlign:"center", fontFamily:"'DM Sans',sans-serif",
-    marginBottom:12,
-  },
-  btnGhost: {
-    background:"none", border:"none",
-    color:"#8888AA", fontSize:13,
-    cursor:"pointer", padding:"8px 0",
-    display:"block", fontFamily:"'DM Sans',sans-serif",
-    letterSpacing:.5,
-  },
-  screen: {
-    padding:"0 16px",
-    fontFamily:"'DM Sans',sans-serif",
-    minHeight:"100vh",
-  },
-  pageHead: {
-    paddingTop:20, paddingBottom:16,
-  },
-  track: (h=6) => ({
-    background:"#141430", borderRadius:100,
-    height:h, overflow:"hidden",
-  }),
-  fill: (w, bg, h=6) => ({
-    height:`${h}px`, width:`${Math.min(100,Math.max(0,w))}%`,
-    background:bg, borderRadius:100,
-    transition:"width .5s cubic-bezier(.4,0,.2,1)",
-  }),
+const sp   = { xs:4, sm:8, md:12, lg:16, xl:20, xxl:28, xxxl:40 };
+const rad  = { sm:8, md:12, lg:16, xl:20, xxl:24, pill:100 };
+const font = { display:"'Bebas Neue',cursive", body:"'DM Sans',sans-serif" };
+const C    = {
+  bg:"#07071A", surface:"#0E0E24", surfaceHi:"#141432",
+  border:"#1C1C3A", borderHi:"#2A2A52",
+  text:"#F0F0FF", sub:"#8888AA", muted:"#44445A",
+  ok:"#22C55E", warn:"#F59E0B", danger:"#EF4444", info:"#3B82F6",
 };
 
-function ProgressBar({ value, color, height=6, glow=false }) {
+// ── Atoms ────────────────────────────────────────────────────────────
+function PBar({ value, color, h=6, glow=false }) {
+  const w = Math.min(100, Math.max(0, value));
   return (
-    <div style={cs.track(height)}>
-      <div style={{
-        ...cs.fill(value, color, height),
-        boxShadow: glow ? `0 0 8px ${color.includes("gradient") ? "#fff" : color}80` : "none",
-      }}/>
+    <div style={{background:C.surfaceHi,borderRadius:rad.pill,height:h,overflow:"hidden"}}>
+      <div style={{height:"100%",width:`${w}%`,background:color,borderRadius:rad.pill,
+        transition:"width .5s cubic-bezier(.4,0,.2,1)",
+        boxShadow:glow?`0 0 10px ${color.includes("gradient")?"rgba(255,255,255,.3)":color}80`:"none"}}/>
     </div>
   );
 }
-
 function Pill({ children, color, bg }) {
-  return (
-    <span style={{
-      display:"inline-flex", alignItems:"center",
-      padding:"3px 10px", borderRadius:100,
-      fontSize:11, fontWeight:600,
-      color: color || "#8888AA",
-      background: bg || "#141430",
-      fontFamily:"'DM Sans',sans-serif",
-      marginRight:4, marginBottom:4,
-    }}>
-      {children}
-    </span>
-  );
+  return <span style={{display:"inline-flex",alignItems:"center",padding:"3px 10px",
+    borderRadius:rad.pill,fontSize:11,fontWeight:600,letterSpacing:.3,
+    color:color||C.sub,background:bg||C.surfaceHi,fontFamily:font.body,
+    marginRight:4,marginBottom:4}}>{children}</span>;
 }
-
-function Label({ children, color }) {
+function Lbl({ children, color }) {
+  return <div style={{fontSize:10,fontWeight:700,letterSpacing:2,textTransform:"uppercase",
+    fontFamily:font.body,color:color||C.muted,marginBottom:6}}>{children}</div>;
+}
+function Num({ icon, value, label, color }) {
   return (
-    <div style={{...cs.label, color: color || "#44445A", marginBottom:8}}>
-      {children}
+    <div style={{background:C.surfaceHi,borderRadius:rad.lg,padding:"12px 8px",
+      display:"flex",flexDirection:"column",alignItems:"center",gap:4}}>
+      {icon&&<span style={{fontSize:18}}>{icon}</span>}
+      <span style={{fontFamily:font.display,fontSize:22,color:color||C.text,lineHeight:1}}>{value}</span>
+      <span style={{fontSize:9,color:C.muted,letterSpacing:.8,textTransform:"uppercase"}}>{label}</span>
     </div>
   );
 }
+function Spc({ h=12 }) { return <div style={{height:h}}/>; }
+function Div() { return <div style={{height:1,background:C.border,margin:"12px 0"}}/>; }
 
-function Metric({ icon, value, label, color, size="md" }) {
-  const valSize = size==="lg"?28:size==="sm"?14:20;
-  return (
-    <div style={cs.metricBox}>
-      {icon && <span style={{fontSize:size==="lg"?22:16}}>{icon}</span>}
-      <span style={{
-        fontFamily:font.display, fontSize:valSize,
-        color: color||C.text, lineHeight:1, letterSpacing:.5,
-      }}>{value}</span>
-      <span style={{fontSize:9,color:C.textMuted,letterSpacing:1,textTransform:"uppercase"}}>{label}</span>
-    </div>
-  );
-}
-
-function Divider() {
-  return <div style={{height:1,background:C.border,margin:`${sp.md}px 0`}}/>;
-}
-
-function Spacer({ h=sp.md }) {
-  return <div style={{height:h}}/>;
-}
+// ── Shared styles ─────────────────────────────────────────────────────
+const S = {
+  screen:   { padding:"0 16px", fontFamily:font.body, minHeight:"100vh" },
+  card:     { background:C.surface, borderRadius:rad.xl, padding:sp.lg, marginBottom:sp.md, border:`1px solid ${C.border}` },
+  btn:      { width:"100%", padding:"15px 0", borderRadius:rad.lg, border:"none", color:"#fff",
+               fontWeight:700, fontSize:14, letterSpacing:1.5, cursor:"pointer",
+               display:"block", textAlign:"center", fontFamily:font.body, marginBottom:sp.md },
+  ghost:    { background:"none", border:"none", color:C.sub, fontSize:13,
+               cursor:"pointer", padding:"8px 0", fontFamily:font.body },
+  pageHead: { paddingTop:sp.xl, paddingBottom:sp.md },
+};
 
 // ════════════════════════════════════════════════════════════════════
 // ROOT
 // ════════════════════════════════════════════════════════════════════
 export default function App() {
-  const [uid, setUid]     = useState(() => DB.get("uid", null));
-  const [tab, setTab]     = useState("home");
+  const [uid,     setUid]     = useState(() => DB.get("uid", null));
+  const [tab,     setTab]     = useState("home");
   const [medidas, setMedidas] = useState(() => ({
     wallace: DB.get("med_wallace", PERFIS.wallace.mediasIniciais),
     suellen: DB.get("med_suellen", PERFIS.suellen.mediasIniciais),
@@ -428,154 +353,103 @@ export default function App() {
   const nutri   = uid ? NUTRI[uid] : null;
 
   const salvarMedida = (campo, val) => {
-    const novas = { ...medidas[uid], [campo]: parseFloat(val)||0 };
-    setMedidas(p => { const n={...p,[uid]:novas}; DB.set("med_"+uid, novas); return n; });
+    const novas = { ...medidas[uid], [campo]: parseFloat(val) || 0 };
+    setMedidas(p => { const n = { ...p, [uid]: novas }; DB.set("med_" + uid, novas); return n; });
   };
-
-  const login  = id => { setUid(id); DB.set("uid", id); setTab("home"); };
+  const login  = id  => { setUid(id); DB.set("uid", id); setTab("home"); };
   const logout = ()  => { setUid(null); DB.set("uid", null); };
 
   if (!uid) return <Splash onLogin={login} />;
-
   return (
-    <Frame
-      usuario={usuario} med={med} tab={tab} setTab={setTab}
-      treinos={treinos} nutri={nutri}
-      onLogout={logout} salvarMedida={salvarMedida}
-      outro={medidas[uid==="wallace"?"suellen":"wallace"]}
-      outroPerfil={PERFIS[uid==="wallace"?"suellen":"wallace"]}
-    />
+    <Shell usuario={usuario} med={med} tab={tab} setTab={setTab}
+      treinos={treinos} nutri={nutri} onLogout={logout}
+      salvarMedida={salvarMedida}
+      outro={medidas[uid === "wallace" ? "suellen" : "wallace"]}
+      outroPerfil={PERFIS[uid === "wallace" ? "suellen" : "wallace"]} />
   );
 }
 
-
 // ════════════════════════════════════════════════════════════════════
-// SPLASH / LOGIN
+// SPLASH
 // ════════════════════════════════════════════════════════════════════
 function Splash({ onLogin }) {
   const [frase] = useState(rnd(FRASES));
-
   return (
-    <div style={{
-      minHeight:"100vh", background:C.bg,
-      display:"flex", alignItems:"center", justifyContent:"center",
-      fontFamily:font.body, overflow:"hidden", position:"relative",
-    }}>
+    <div style={{minHeight:"100vh",background:C.bg,display:"flex",alignItems:"center",
+      justifyContent:"center",fontFamily:font.body,overflow:"hidden",position:"relative"}}>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,300;0,400;0,600;0,700;1,400&display=swap');
         *{box-sizing:border-box;margin:0;padding:0;}
-        body{background:#07071A;overflow-x:hidden;-webkit-font-smoothing:antialiased;}
-        @keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
-        @keyframes floatY{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
-        @keyframes pulseGlow{0%,100%{opacity:.5}50%{opacity:1}}
-        @keyframes timerTick{from{transform:scale(1)}to{transform:scale(.96)}}
+        body{background:#07071A;-webkit-font-smoothing:antialiased;}
+        @keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+        @keyframes floatY{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}
+        @keyframes gPulse{0%,100%{opacity:.5}50%{opacity:1}}
+        .tap:active{transform:scale(.97);transition:transform .1s;}
         ::-webkit-scrollbar{width:0}
         input[type=range]{-webkit-appearance:none;height:4px;border-radius:2px;outline:none;}
         input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;cursor:pointer;}
-        .hover-lift{transition:transform .2s ease,box-shadow .2s ease;}
-        .hover-lift:hover{transform:translateY(-3px);}
-        .tap-scale:active{transform:scale(.97);}
       `}</style>
-
       {/* ambient */}
-      <div style={{position:"fixed",inset:0,pointerEvents:"none",overflow:"hidden"}}>
-        <div style={{position:"absolute",top:"-30%",left:"-20%",width:480,height:480,borderRadius:"50%",background:"#00D4FF06",filter:"blur(70px)",animation:"floatY 10s ease-in-out infinite"}}/>
-        <div style={{position:"absolute",bottom:"-30%",right:"-20%",width:480,height:480,borderRadius:"50%",background:"#FF5FA006",filter:"blur(70px)",animation:"floatY 10s ease-in-out infinite",animationDelay:"5s"}}/>
+      <div style={{position:"fixed",inset:0,pointerEvents:"none",overflow:"hidden",zIndex:0}}>
+        <div style={{position:"absolute",top:"-25%",left:"-20%",width:440,height:440,borderRadius:"50%",background:"#00D4FF06",filter:"blur(70px)",animation:"floatY 10s ease-in-out infinite"}}/>
+        <div style={{position:"absolute",bottom:"-25%",right:"-20%",width:440,height:440,borderRadius:"50%",background:"#FF5FA006",filter:"blur(70px)",animation:"floatY 10s ease-in-out infinite",animationDelay:"5s"}}/>
       </div>
-
       <div style={{position:"relative",zIndex:1,width:"100%",maxWidth:420,padding:"0 20px"}}>
-
         {/* logo */}
-        <div style={{textAlign:"center",marginBottom:sp.xl,animation:"fadeUp .5s ease"}}>
-          <div style={{fontSize:56,marginBottom:sp.sm,display:"inline-block",animation:"floatY 3s ease-in-out infinite"}}>⚡</div>
-          <div style={{fontFamily:font.display,fontSize:48,letterSpacing:6,color:C.text,lineHeight:1}}>PROJETO</div>
-          <div style={{fontFamily:font.display,fontSize:22,letterSpacing:14,color:"#00D4FF",marginTop:2}}>EVOLUÇÃO</div>
+        <div style={{textAlign:"center",marginBottom:sp.xxl,animation:"fadeUp .5s ease"}}>
+          <div style={{fontSize:52,marginBottom:sp.sm,display:"inline-block",animation:"floatY 3s ease-in-out infinite"}}>⚡</div>
+          <div style={{fontFamily:font.display,fontSize:46,letterSpacing:6,color:C.text,lineHeight:1}}>PROJETO</div>
+          <div style={{fontFamily:font.display,fontSize:20,letterSpacing:14,color:"#00D4FF",marginTop:4}}>EVOLUÇÃO</div>
         </div>
-
         {/* frase */}
-        <div style={{
-          background:C.surface, borderRadius:r.xl,
-          padding:`${sp.md}px ${sp.lg}px`,
-          marginBottom:sp.xl,
-          borderLeft:`2px solid #00D4FF33`,
-          animation:"fadeUp .5s ease .1s both",
-        }}>
-          <p style={{fontSize:13,color:C.textSub,lineHeight:1.7,fontStyle:"italic",margin:0}}>
-            "{frase}"
-          </p>
+        <div style={{background:C.surface,borderRadius:rad.xl,padding:"14px 18px",marginBottom:sp.xxl,
+          borderLeft:"2px solid #00D4FF30",animation:"fadeUp .5s ease .1s both"}}>
+          <p style={{fontSize:13,color:C.sub,lineHeight:1.7,fontStyle:"italic",margin:0}}>"{frase}"</p>
         </div>
-
+        <div style={{fontSize:10,color:C.muted,letterSpacing:3,textAlign:"center",marginBottom:sp.lg}}>SELECIONE SEU PERFIL</div>
         {/* profile cards */}
         <div style={{display:"flex",gap:sp.md,animation:"fadeUp .5s ease .2s both"}}>
           {[PERFIS.wallace, PERFIS.suellen].map(u => {
             const imcV = imc(u.mediasIniciais.peso, u.altura);
             const prog = pct(u.mediasIniciais.peso, u.pesoInicial, u.pesoMeta);
             return (
-              <button key={u.id} className="hover-lift tap-scale"
-                onClick={() => onLogin(u.id)}
-                style={{
-                  flex:1, background:C.surface,
-                  border:`1px solid ${C.border}`,
-                  borderRadius:r.xl+4, padding:`${sp.xl}px ${sp.md}px`,
-                  cursor:"pointer", display:"flex", flexDirection:"column",
-                  alignItems:"center", gap:sp.sm,
-                  fontFamily:font.body,
-                  transition:"border-color .2s, box-shadow .2s",
-                }}>
-                {/* avatar */}
-                <div style={{
-                  width:80, height:80, borderRadius:"50%",
-                  overflow:"hidden",
-                  border:`2.5px solid ${u.cor}`,
-                  boxShadow:`0 0 0 4px ${u.cor}18`,
-                  flexShrink:0,
-                }}>
+              <button key={u.id} className="tap" onClick={() => onLogin(u.id)}
+                style={{flex:1,background:C.surface,border:`1px solid ${C.border}`,borderRadius:rad.xxl,
+                  padding:"22px 14px",cursor:"pointer",display:"flex",flexDirection:"column",
+                  alignItems:"center",gap:sp.sm,fontFamily:font.body,transition:"border-color .2s"}}>
+                <div style={{width:80,height:80,borderRadius:"50%",overflow:"hidden",
+                  border:`2.5px solid ${u.cor}`,boxShadow:`0 0 0 4px ${u.cor}18`,flexShrink:0}}>
                   <img src={u.foto} alt={u.nome} style={{width:"100%",height:"100%",objectFit:"cover",objectPosition:"top"}}/>
                 </div>
-
                 <div style={{fontFamily:font.display,fontSize:22,letterSpacing:3,color:u.cor}}>{u.nome.toUpperCase()}</div>
-                <div style={{fontSize:11,color:C.textSub,textAlign:"center",lineHeight:1.5,paddingBottom:4}}>{u.objetivo}</div>
-
-                {/* stats row */}
-                <div style={{
-                  display:"grid", gridTemplateColumns:"1fr 1fr 1fr",
-                  width:"100%", background:C.surfaceHigh,
-                  borderRadius:r.md, overflow:"hidden",
-                }}>
+                <div style={{fontSize:11,color:C.sub,textAlign:"center",lineHeight:1.5}}>{u.objetivo}</div>
+                <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",width:"100%",
+                  background:C.surfaceHi,borderRadius:rad.md,overflow:"hidden"}}>
                   {[[u.mediasIniciais.peso+"kg","Peso"],[imcV,"IMC"],[u.pesoMeta+"kg","Meta"]].map(([v,l],i,arr)=>(
-                    <div key={l} style={{
-                      padding:"8px 0", textAlign:"center",
-                      borderRight: i<arr.length-1 ? `1px solid ${C.border}` : "none",
-                    }}>
+                    <div key={l} style={{padding:"8px 0",textAlign:"center",
+                      borderRight:i<arr.length-1?`1px solid ${C.border}`:"none"}}>
                       <div style={{fontSize:14,fontWeight:600,color:C.text}}>{v}</div>
-                      <div style={{fontSize:9,color:C.textMuted,letterSpacing:1}}>{l}</div>
+                      <div style={{fontSize:9,color:C.muted,letterSpacing:.8}}>{l}</div>
                     </div>
                   ))}
                 </div>
-
-                {/* progress */}
                 <div style={{width:"100%"}}>
-                  <div style={{display:"flex",justifyContent:"space-between",marginBottom:5}}>
-                    <span style={{fontSize:9,color:C.textMuted,letterSpacing:1}}>PROGRESSO</span>
+                  <div style={{display:"flex",justifyContent:"space-between",marginBottom:4}}>
+                    <span style={{fontSize:9,color:C.muted,letterSpacing:1}}>PROGRESSO</span>
                     <span style={{fontSize:9,color:u.cor,fontWeight:700}}>{prog.toFixed(0)}%</span>
                   </div>
-                  <ProgressBar value={prog} color={`linear-gradient(90deg,${u.cor},${u.corEscura})`} glow/>
+                  <PBar value={prog} color={`linear-gradient(90deg,${u.cor},${u.corEscura})`} glow/>
                 </div>
-
-                {/* cta */}
-                <div style={{
-                  width:"100%",padding:"12px 0",
-                  borderRadius:r.md,
+                <div style={{width:"100%",padding:"12px 0",borderRadius:rad.md,
                   background:`linear-gradient(135deg,${u.cor},${u.corEscura})`,
-                  color:"#fff",fontWeight:700,fontSize:12,
-                  letterSpacing:1.5,textAlign:"center",
-                }}>ENTRAR</div>
+                  color:"#fff",fontWeight:700,fontSize:12,letterSpacing:1.5,textAlign:"center"}}>
+                  ENTRAR →
+                </div>
               </button>
             );
           })}
         </div>
-
-        <div style={{textAlign:"center",fontSize:10,color:C.textMuted,marginTop:sp.xl,letterSpacing:2}}>
+        <div style={{textAlign:"center",fontSize:10,color:C.muted,marginTop:sp.xl,letterSpacing:2}}>
           USO PESSOAL · WALLACE & SUELLEN
         </div>
       </div>
@@ -584,64 +458,42 @@ function Splash({ onLogin }) {
 }
 
 // ════════════════════════════════════════════════════════════════════
-// FRAME
+// SHELL
 // ════════════════════════════════════════════════════════════════════
-function Frame({ usuario, med, tab, setTab, treinos, nutri, onLogout, salvarMedida, outro, outroPerfil }) {
+function Shell({ usuario, med, tab, setTab, treinos, nutri, onLogout, salvarMedida, outro, outroPerfil }) {
   const ABAS = [
-    {id:"home",     ic:"⚡", lb:"Início"},
-    {id:"treino",   ic:"💪", lb:"Treino"},
-    {id:"evolucao", ic:"📈", lb:"Progresso"},
-    {id:"pratico",  ic:"🍳", lb:"Comer"},
-    {id:"perfil",   ic:"👤", lb:"Perfil"},
+    { id:"home",     ic:"⚡", lb:"Início"   },
+    { id:"treino",   ic:"💪", lb:"Treino"   },
+    { id:"semana",   ic:"📅", lb:"Semana"   },
+    { id:"evolucao", ic:"📈", lb:"Progresso"},
+    { id:"perfil",   ic:"👤", lb:"Perfil"   },
   ];
-
   return (
-    <div style={{background:C.bg,minHeight:"100vh",maxWidth:480,margin:"0 auto",fontFamily:font.body,color:C.text,position:"relative"}}>
+    <div style={{background:C.bg,minHeight:"100vh",maxWidth:480,margin:"0 auto",fontFamily:font.body,color:C.text}}>
       <div style={{paddingBottom:72}}>
-        {tab==="home"     && <Home        usuario={usuario} med={med} treinos={treinos} setTab={setTab} onLogout={onLogout} outro={outro} outroPerfil={outroPerfil}/>}
-        {tab==="treino"   && <Treino      usuario={usuario} treinos={treinos} med={med}/>}
-        {tab==="evolucao" && <Evolucao    usuario={usuario} med={med} salvarMedida={salvarMedida}/>}
-        {tab==="pratico"  && <AlimPratica usuario={usuario} nutri={nutri}/>}
-        {tab==="perfil"   && <Perfil      usuario={usuario} med={med} onLogout={onLogout} outroPerfil={outroPerfil} outroMed={outro}/>}
+        {tab==="home"     && <Home     usuario={usuario} med={med} treinos={treinos} setTab={setTab} onLogout={onLogout} outro={outro} outroPerfil={outroPerfil}/>}
+        {tab==="treino"   && <Treino   usuario={usuario} treinos={treinos} med={med}/>}
+        {tab==="semana"   && <Semana   usuario={usuario} treinos={treinos} setTab={setTab}/>}
+        {tab==="evolucao" && <Evolucao usuario={usuario} med={med} salvarMedida={salvarMedida}/>}
+        {tab==="perfil"   && <Perfil   usuario={usuario} med={med} onLogout={onLogout} outroPerfil={outroPerfil} outroMed={outro} treinos={treinos}/>}
       </div>
-
-      {/* Nav bar */}
-      <nav style={{
-        position:"fixed", bottom:0,
-        left:"50%", transform:"translateX(-50%)",
-        width:"100%", maxWidth:480,
-        background:"rgba(7,7,26,.92)",
-        backdropFilter:"blur(24px)",
-        borderTop:`1px solid ${C.border}`,
-        display:"flex", zIndex:100,
-        paddingBottom:"env(safe-area-inset-bottom)",
-      }}>
+      <nav style={{position:"fixed",bottom:0,left:"50%",transform:"translateX(-50%)",
+        width:"100%",maxWidth:480,background:"rgba(7,7,26,.95)",
+        backdropFilter:"blur(24px)",borderTop:`1px solid ${C.border}`,
+        display:"flex",zIndex:100}}>
         {ABAS.map(a => {
           const active = tab === a.id;
           return (
-            <button key={a.id} onClick={()=>setTab(a.id)}
-              style={{
-                flex:1, background:"none", border:"none",
-                cursor:"pointer", padding:"11px 2px 9px",
-                display:"flex", flexDirection:"column",
-                alignItems:"center", gap:3, position:"relative",
-                transition:"opacity .15s",
-              }}>
-              {active && (
-                <div style={{
-                  position:"absolute", top:0,
-                  left:"50%", transform:"translateX(-50%)",
-                  width:20, height:2, borderRadius:r.pill,
-                  background:usuario.cor,
-                }}/>
-              )}
-              <span style={{fontSize:19,lineHeight:1,opacity:active?1:.45}}>{a.ic}</span>
-              <span style={{
-                fontSize:9, letterSpacing:.3,
-                fontWeight:active?700:400,
-                color:active?usuario.cor:C.textMuted,
-                transition:"color .15s",
-              }}>{a.lb}</span>
+            <button key={a.id} className="tap" onClick={() => setTab(a.id)}
+              style={{flex:1,background:"none",border:"none",cursor:"pointer",
+                padding:"11px 2px 9px",display:"flex",flexDirection:"column",
+                alignItems:"center",gap:3,position:"relative"}}>
+              {active && <div style={{position:"absolute",top:0,left:"50%",
+                transform:"translateX(-50%)",width:20,height:2,
+                borderRadius:rad.pill,background:usuario.cor}}/>}
+              <span style={{fontSize:19,lineHeight:1,opacity:active?1:.4}}>{a.ic}</span>
+              <span style={{fontSize:9,letterSpacing:.3,fontWeight:active?700:400,
+                color:active?usuario.cor:C.muted}}>{a.lb}</span>
             </button>
           );
         })}
@@ -655,9 +507,9 @@ function Frame({ usuario, med, tab, setTab, treinos, nutri, onLogout, salvarMedi
 // ════════════════════════════════════════════════════════════════════
 function Home({ usuario, med, treinos, setTab, onLogout, outro, outroPerfil }) {
   const [frase]   = useState(rnd(FRASES));
-  const [agua,     setAgua]    = useState(() => DB.get("agua_"+usuario.id+"_"+new Date().toDateString(), 0));
-  const [checkin,  setCheckin] = useState(() => DB.get("ci_"+usuario.id+"_"+new Date().toDateString(), false));
-  const [streak]               = useState(() => DB.get("streak_"+usuario.id, 7));
+  const [agua,    setAgua]    = useState(() => DB.get("agua_"+usuario.id+"_"+new Date().toDateString(), 0));
+  const [checkin, setCheckin] = useState(() => DB.get("ci_"+usuario.id+"_"+new Date().toDateString(), false));
+  const [streak]              = useState(() => DB.get("streak_"+usuario.id, 7));
 
   const salvarAgua = v => { setAgua(v); DB.set("agua_"+usuario.id+"_"+new Date().toDateString(), v); };
   const doCheckin  = () => {
@@ -670,105 +522,87 @@ function Home({ usuario, med, treinos, setTab, onLogout, outro, outroPerfil }) {
   const falta   = (med.peso - usuario.pesoMeta).toFixed(1);
   const diaIdx  = DIAS_TREINO[new Date().getDay()];
   const tHoje   = diaIdx !== null ? Object.values(treinos)[diaIdx] : null;
-  const aguaMeta= usuario.genero === "M" ? 16 : 12;
-  const kcalHoje= tHoje ? tHoje.kcal : 0;
+  const aguaMeta = usuario.genero === "M" ? 16 : 12;
 
   return (
-    <div style={cs.screen}>
-      {/* ── HEADER ── */}
-      <div style={{
-        display:"flex", justifyContent:"space-between",
-        alignItems:"center", padding:`${sp.xl}px 0 ${sp.lg}px`,
-      }}>
+    <div style={S.screen}>
+      {/* HEADER */}
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",
+        padding:`${sp.xl}px 0 ${sp.lg}px`,borderBottom:`1px solid ${C.border}`,marginBottom:sp.lg}}>
         <div style={{display:"flex",alignItems:"center",gap:sp.md}}>
           <div style={{position:"relative",flexShrink:0}}>
-            <img src={usuario.foto} alt={usuario.nome}
-              style={{width:48,height:48,borderRadius:"50%",objectFit:"cover",objectPosition:"top",border:`2px solid ${usuario.cor}`,display:"block"}}/>
-            <div style={{position:"absolute",bottom:1,right:1,width:11,height:11,borderRadius:"50%",background:usuario.cor,border:`2px solid ${C.bg}`}}/>
+            <img src={usuario.foto} alt={usuario.nome} style={{width:48,height:48,borderRadius:"50%",
+              objectFit:"cover",objectPosition:"top",border:`2px solid ${usuario.cor}`,display:"block"}}/>
+            <div style={{position:"absolute",bottom:1,right:1,width:11,height:11,borderRadius:"50%",
+              background:usuario.cor,border:`2px solid ${C.bg}`}}/>
           </div>
           <div>
-            <div style={{fontSize:11,color:C.textMuted,letterSpacing:.5}}>Olá,</div>
-            <div style={{fontFamily:font.display,fontSize:22,letterSpacing:2,color:usuario.cor,lineHeight:1.1}}>{usuario.nome.toUpperCase()}</div>
-            <div style={{fontSize:10,color:C.textMuted,marginTop:2,textTransform:"capitalize"}}>{hoje()}</div>
+            <div style={{fontSize:11,color:C.muted,letterSpacing:.5}}>Olá,</div>
+            <div style={{fontFamily:font.display,fontSize:22,letterSpacing:2,color:usuario.cor,lineHeight:1.1}}>
+              {usuario.nome.toUpperCase()}
+            </div>
+            <div style={{fontSize:10,color:C.muted,marginTop:2,textTransform:"capitalize"}}>{hoje()}</div>
           </div>
         </div>
         <div style={{display:"flex",gap:sp.sm,alignItems:"center"}}>
-          <div style={{
-            display:"flex",alignItems:"center",gap:5,
-            background:C.surface, border:`1px solid ${C.border}`,
-            borderRadius:r.pill, padding:"5px 12px",
-          }}>
+          <div style={{display:"flex",alignItems:"center",gap:5,background:C.surface,
+            border:`1px solid ${C.border}`,borderRadius:rad.pill,padding:"5px 12px"}}>
             <span style={{fontSize:14}}>🔥</span>
             <span style={{color:usuario.cor,fontWeight:700,fontSize:14}}>{streak}</span>
           </div>
-          <button onClick={onLogout} style={{
-            width:34,height:34,borderRadius:"50%",
-            background:C.surface,border:`1px solid ${C.border}`,
-            color:C.textSub,cursor:"pointer",fontSize:14,
-            display:"flex",alignItems:"center",justifyContent:"center",
-          }}>↩</button>
+          <button className="tap" onClick={onLogout} style={{width:34,height:34,borderRadius:"50%",
+            background:C.surface,border:`1px solid ${C.border}`,color:C.sub,cursor:"pointer",
+            fontSize:14,display:"flex",alignItems:"center",justifyContent:"center"}}>↩</button>
         </div>
       </div>
 
-      {/* ── PROGRESS HERO ── */}
-      <div style={{
-        ...cs.card,
-        background:`linear-gradient(135deg, ${usuario.cor}12 0%, ${C.surface} 60%)`,
-        border:`1px solid ${usuario.cor}28`,
-        padding:sp.xl,
-        marginBottom:sp.lg,
-      }}>
+      {/* PROGRESS HERO */}
+      <div style={{...S.card,background:`linear-gradient(135deg,${usuario.cor}12,${C.surface})`,
+        border:`1px solid ${usuario.cor}28`,padding:sp.xl,marginBottom:sp.lg}}>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-end",marginBottom:sp.md}}>
           <div>
-            <Label color={usuario.cor}>META DE EMAGRECIMENTO</Label>
-            <div style={{fontFamily:font.display,fontSize:40,color:C.text,lineHeight:1,letterSpacing:1}}>
-              {prog.toFixed(0)}<span style={{fontSize:20}}>%</span>
+            <Lbl color={usuario.cor}>META DE EMAGRECIMENTO</Lbl>
+            <div style={{fontFamily:font.display,fontSize:42,color:C.text,lineHeight:1,letterSpacing:1}}>
+              {prog.toFixed(0)}<span style={{fontSize:22,opacity:.7}}>%</span>
             </div>
           </div>
           <div style={{textAlign:"right"}}>
-            <div style={{fontSize:11,color:C.textMuted}}>Perdidos</div>
-            <div style={{fontFamily:font.display,fontSize:28,color:C.success,lineHeight:1}}>-{perdido}kg</div>
-            <div style={{fontSize:11,color:C.textMuted,marginTop:2}}>Faltam {falta}kg</div>
+            <div style={{fontSize:11,color:C.muted}}>Perdidos</div>
+            <div style={{fontFamily:font.display,fontSize:30,color:C.ok,lineHeight:1}}>-{perdido}kg</div>
+            <div style={{fontSize:11,color:C.muted,marginTop:2}}>Faltam {falta}kg</div>
           </div>
         </div>
-        <ProgressBar value={prog} color={`linear-gradient(90deg,${usuario.cor},${usuario.corEscura})`} height={8} glow/>
+        <PBar value={prog} color={`linear-gradient(90deg,${usuario.cor},${usuario.corEscura})`} h={8} glow/>
         <div style={{display:"flex",justifyContent:"space-between",marginTop:sp.sm}}>
-          <span style={{fontSize:10,color:C.textMuted}}>Início {usuario.pesoInicial}kg</span>
-          <span style={{fontSize:10,color:C.textMuted}}>Meta {usuario.pesoMeta}kg</span>
+          <span style={{fontSize:10,color:C.muted}}>Início {usuario.pesoInicial}kg</span>
+          <span style={{fontSize:10,color:C.muted}}>Meta {usuario.pesoMeta}kg</span>
         </div>
       </div>
 
-      {/* ── QUICK STATS ── */}
+      {/* STATS */}
       <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:sp.sm,marginBottom:sp.lg}}>
-        <Metric icon="⚖️" value={med.peso+"kg"} label="Peso atual" color={usuario.cor}/>
-        <Metric icon="📊" value={imcV} label="IMC" color={imcCor(imcV)}/>
-        <Metric icon="🔥" value={kcalHoje} label="kcal hoje" color="#F59E0B"/>
+        <Num icon="⚖️" value={med.peso+"kg"} label="Peso" color={usuario.cor}/>
+        <Num icon="📊" value={imcV} label="IMC" color={imcCor(imcV)}/>
+        <Num icon="🔥" value={tHoje?tHoje.kcal:0} label="kcal hoje" color={C.warn}/>
       </div>
 
-      {/* ── MOTIVAÇÃO ── */}
-      <div style={{
-        ...cs.card,
-        borderLeft:`3px solid ${usuario.cor}55`,
-        padding:`${sp.md}px ${sp.lg}px`,
-        marginBottom:sp.lg,
-      }}>
-        <Label color={usuario.cor}>✦ MOTIVAÇÃO</Label>
-        <p style={{fontSize:13,color:C.textSub,lineHeight:1.7,fontStyle:"italic",margin:0}}>"{frase}"</p>
+      {/* FRASE */}
+      <div style={{...S.card,borderLeft:`3px solid ${usuario.cor}44`,padding:"12px 16px",marginBottom:sp.lg}}>
+        <Lbl color={usuario.cor}>✦ MOTIVAÇÃO</Lbl>
+        <p style={{fontSize:13,color:C.sub,lineHeight:1.7,fontStyle:"italic",margin:0}}>"{frase}"</p>
       </div>
 
-      {/* ── TREINO HOJE ── */}
+      {/* TREINO DO DIA */}
       {tHoje ? (
-        <div style={{
-          ...cs.card,
-          border:`1px solid ${usuario.cor}30`,
-          background:`linear-gradient(160deg,${usuario.cor}0A,${C.surface})`,
-          padding:sp.xl,
-        }}>
+        <div style={{...S.card,border:`1px solid ${usuario.cor}30`,
+          background:`linear-gradient(160deg,${usuario.cor}0A,${C.surface})`,padding:sp.xl}}>
           <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:sp.md}}>
             <div style={{flex:1}}>
-              <Label color={usuario.cor}>💪 TREINO DE HOJE · {DIAS[new Date().getDay()].toUpperCase()}</Label>
-              <div style={{fontFamily:font.display,fontSize:24,letterSpacing:2,lineHeight:1.1,marginBottom:4}}>{tHoje.nome}</div>
-              <div style={{fontSize:12,color:C.textSub}}>{tHoje.foco}</div>
+              <Lbl color={usuario.cor}>💪 TREINO DE HOJE · {DIAS[new Date().getDay()].toUpperCase()}</Lbl>
+              <div style={{fontFamily:font.display,fontSize:26,letterSpacing:2,lineHeight:1.1,marginBottom:4}}>
+                {tHoje.nome}
+              </div>
+              <div style={{fontSize:12,color:C.sub}}>{tHoje.foco}</div>
             </div>
           </div>
           <div style={{display:"flex",gap:sp.sm,marginBottom:sp.lg,flexWrap:"wrap"}}>
@@ -776,151 +610,159 @@ function Home({ usuario, med, treinos, setTab, onLogout, outro, outroPerfil }) {
             <Pill>🔥 ~{tHoje.kcal}kcal</Pill>
             <Pill>📋 {tHoje.exercicios.length} exercícios</Pill>
           </div>
-          {tHoje.exercicios.slice(0,3).map((ex,i)=>(
-            <div key={i} style={{
-              display:"flex",alignItems:"center",gap:sp.sm,
-              padding:`${sp.sm}px 0`,
-              borderBottom: i<2 ? `1px solid ${C.border}` : "none",
-            }}>
-              <span style={{
-                width:20,height:20,borderRadius:"50%",
-                background:`${usuario.cor}22`,
+          {tHoje.exercicios.slice(0,3).map((ex,i) => (
+            <div key={i} style={{display:"flex",alignItems:"center",gap:sp.sm,
+              padding:`${sp.sm}px 0`,borderBottom:i<2?`1px solid ${C.border}`:"none"}}>
+              <span style={{width:20,height:20,borderRadius:"50%",background:`${usuario.cor}22`,
                 display:"inline-flex",alignItems:"center",justifyContent:"center",
-                fontSize:10,fontWeight:700,color:usuario.cor,flexShrink:0,
-              }}>{i+1}</span>
-              <span style={{flex:1,fontSize:13,color:C.text}}>{ex.nome}</span>
-              <span style={{fontSize:11,color:C.textMuted}}>{ex.series}×{ex.reps}</span>
+                fontSize:10,fontWeight:700,color:usuario.cor,flexShrink:0}}>{i+1}</span>
+              <span style={{flex:1,fontSize:13}}>{ex.nome}</span>
+              <span style={{fontSize:11,color:C.muted}}>{ex.series}×{ex.reps}</span>
             </div>
           ))}
-          {tHoje.exercicios.length>3 && (
-            <div style={{fontSize:11,color:C.textMuted,marginTop:sp.sm}}>
-              +{tHoje.exercicios.length-3} exercícios
+          {tHoje.exercicios.length > 3 && (
+            <div style={{fontSize:11,color:C.muted,marginTop:sp.sm}}>
+              +{tHoje.exercicios.length - 3} exercícios
             </div>
           )}
-          <button onClick={()=>setTab("treino")} className="tap-scale"
-            style={{...cs.btn,background:`linear-gradient(135deg,${usuario.cor},${usuario.corEscura})`,marginTop:sp.lg,marginBottom:0}}>
+          <button className="tap" onClick={() => setTab("treino")}
+            style={{...S.btn,background:`linear-gradient(135deg,${usuario.cor},${usuario.corEscura})`,marginTop:sp.lg,marginBottom:0}}>
             INICIAR TREINO →
           </button>
         </div>
       ) : (
-        <div style={{...cs.card,textAlign:"center",padding:sp.xxxl}}>
+        <div style={{...S.card,textAlign:"center",padding:sp.xxxl}}>
           <div style={{fontSize:44,marginBottom:sp.md}}>🛌</div>
           <div style={{fontFamily:font.display,fontSize:22,letterSpacing:3,marginBottom:sp.sm}}>DIA DE DESCANSO</div>
-          <div style={{fontSize:13,color:C.textSub,lineHeight:1.6}}>Recuperação é parte do treino. Seu corpo cresce agora.</div>
+          <div style={{fontSize:13,color:C.sub,lineHeight:1.6}}>Recuperação é parte do processo. Descanse bem.</div>
         </div>
       )}
 
-      {/* ── CHECK-IN ── */}
-      <button onClick={doCheckin} className="tap-scale"
-        style={{
-          ...cs.btn,
-          background: checkin
-            ? "linear-gradient(135deg,#16A34A,#14532D)"
-            : `linear-gradient(135deg,${usuario.cor},${usuario.corEscura})`,
-        }}>
-        {checkin ? "✅ CHECK-IN FEITO  ·  STREAK +1 🔥" : "📍 FAZER CHECK-IN DO DIA"}
+      {/* CHECK-IN */}
+      <button className="tap" onClick={doCheckin}
+        style={{...S.btn,background:checkin?"linear-gradient(135deg,#16A34A,#14532D)":`linear-gradient(135deg,${usuario.cor},${usuario.corEscura})`}}>
+        {checkin ? "✅ CHECK-IN FEITO · STREAK +1 🔥" : "📍 FAZER CHECK-IN DO DIA"}
       </button>
 
-      {/* ── HIDRATAÇÃO ── */}
-      <div style={{...cs.card}}>
+      {/* ÁGUA */}
+      <div style={{...S.card}}>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:sp.sm}}>
-          <Label>💧 ÁGUA DO DIA</Label>
+          <Lbl>💧 ÁGUA DO DIA</Lbl>
           <span style={{fontSize:12,color:"#38BDF8",fontWeight:600}}>{(agua*.25).toFixed(1)}L / {(aguaMeta*.25).toFixed(1)}L</span>
         </div>
-        <ProgressBar value={(agua/aguaMeta)*100} color="linear-gradient(90deg,#38BDF8,#0284C7)" height={5}/>
+        <PBar value={(agua/aguaMeta)*100} color="linear-gradient(90deg,#38BDF8,#0284C7)" h={5}/>
         <div style={{display:"flex",gap:5,flexWrap:"wrap",marginTop:sp.md}}>
-          {[...Array(aguaMeta)].map((_,i)=>(
-            <button key={i} onClick={()=>salvarAgua(i+1)} className="tap-scale"
-              style={{
-                width:36,height:36,borderRadius:r.sm,
+          {[...Array(aguaMeta)].map((_,i) => (
+            <button key={i} className="tap" onClick={() => salvarAgua(i+1)}
+              style={{width:34,height:34,borderRadius:8,
                 border:`1px solid ${i<agua?"#38BDF8":C.border}`,
-                background: i<agua ? "#38BDF822" : C.surfaceHigh,
-                cursor:"pointer",fontSize:13,
-                transition:"all .15s",
-              }}>💧</button>
+                background:i<agua?"#38BDF822":C.surfaceHi,
+                cursor:"pointer",fontSize:13}}>💧</button>
           ))}
         </div>
       </div>
 
-      {/* ── PARCEIRO ── */}
-      <div style={{...cs.card,border:`1px solid ${outroPerfil.cor}20`,marginBottom:sp.md}}>
-        <Label>👫 PARCEIRO(A)</Label>
+      {/* PARCEIRO */}
+      <div style={{...S.card,border:`1px solid ${outroPerfil.cor}18`,marginBottom:sp.xl}}>
+        <Lbl>👫 PARCEIRO(A)</Lbl>
         <div style={{display:"flex",alignItems:"center",gap:sp.md,marginTop:sp.sm}}>
-          <img src={outroPerfil.foto} alt={outroPerfil.nome}
-            style={{width:46,height:46,borderRadius:"50%",objectFit:"cover",objectPosition:"top",border:`2px solid ${outroPerfil.cor}`,flexShrink:0}}/>
+          <img src={outroPerfil.foto} alt={outroPerfil.nome} style={{width:46,height:46,borderRadius:"50%",
+            objectFit:"cover",objectPosition:"top",border:`2px solid ${outroPerfil.cor}`,flexShrink:0}}/>
           <div style={{flex:1}}>
-            <div style={{fontFamily:font.display,fontSize:18,letterSpacing:2,color:outroPerfil.cor}}>{outroPerfil.nome.toUpperCase()}</div>
-            <div style={{fontSize:11,color:C.textSub,marginTop:2,marginBottom:sp.sm}}>{outroPerfil.objetivo}</div>
-            <ProgressBar value={pct(outro.peso||outroPerfil.pesoInicial,outroPerfil.pesoInicial,outroPerfil.pesoMeta)} color={`linear-gradient(90deg,${outroPerfil.cor},${outroPerfil.corEscura})`} height={4}/>
+            <div style={{fontFamily:font.display,fontSize:18,letterSpacing:2,color:outroPerfil.cor,lineHeight:1,marginBottom:4}}>
+              {outroPerfil.nome.toUpperCase()}
+            </div>
+            <div style={{fontSize:11,color:C.sub,marginBottom:sp.sm}}>{outroPerfil.objetivo}</div>
+            <PBar value={pct(outro.peso||outroPerfil.pesoInicial,outroPerfil.pesoInicial,outroPerfil.pesoMeta)}
+              color={`linear-gradient(90deg,${outroPerfil.cor},${outroPerfil.corEscura})`} h={4}/>
             <div style={{fontSize:10,color:outroPerfil.cor,marginTop:3}}>
               {pct(outro.peso||outroPerfil.pesoInicial,outroPerfil.pesoInicial,outroPerfil.pesoMeta).toFixed(0)}% da meta
             </div>
           </div>
         </div>
       </div>
-
-      <Spacer h={80}/>
+      <Spc h={80}/>
     </div>
   );
 }
 
 // ════════════════════════════════════════════════════════════════════
-// TREINO
+// TREINO — abre direto no treino do dia, sem lista
 // ════════════════════════════════════════════════════════════════════
 function Treino({ usuario, treinos, med }) {
-  const [vista,  setVista]  = useState(() => {
-    const idx = DIAS_TREINO[new Date().getDay()];
-    return idx !== null ? "det" : "lista";
-  });
-  const [sel,    setSel]    = useState(null);
+  // Determine today's workout
+  const diaIdx    = DIAS_TREINO[new Date().getDay()];
+  const hojeT     = diaIdx !== null ? Object.values(treinos)[diaIdx] : null;
+
+  // Views: "det" (exercise list) | "ex" (single exercise)
+  const [sel,    setSel]    = useState(hojeT);
+  const [vista,  setVista]  = useState(hojeT ? "det" : "rest");
   const [exIdx,  setExIdx]  = useState(0);
   const [timer,  setTimer]  = useState(0);
   const [ativo,  setAtivo]  = useState(false);
   const [feitos, setFeitos] = useState({});
-  const ref = useRef(null);
+  const timerRef = useRef(null);
 
-  useEffect(()=>{
-    if (ativo && timer>0) { ref.current = setTimeout(()=>setTimer(t=>t-1),1000); }
-    else if (timer===0)   { setAtivo(false); }
-    return ()=>clearTimeout(ref.current);
-  },[ativo,timer]);
+  useEffect(() => {
+    if (ativo && timer > 0) {
+      timerRef.current = setTimeout(() => setTimer(t => t - 1), 1000);
+    } else if (timer === 0) {
+      setAtivo(false);
+    }
+    return () => clearTimeout(timerRef.current);
+  }, [ativo, timer]);
 
   const startTimer = s => { setTimer(s); setAtivo(true); };
-  const toggleSet  = (ei,si) => setFeitos(p=>({...p,[`${ei}-${si}`]:!p[`${ei}-${si}`]}));
+  const toggleSet  = (ei, si) => setFeitos(p => ({ ...p, [`${ei}-${si}`]: !p[`${ei}-${si}`] }));
 
-  // ── EXERCISE VIEW ──
-  if (vista==="ex" && sel) {
-    const ex = sel.exercicios[exIdx];
+  // ── DESCANSO ──
+  if (vista === "rest") {
+    return (
+      <div style={S.screen}>
+        <div style={S.pageHead}>
+          <div style={{fontFamily:font.display,fontSize:34,letterSpacing:4,marginBottom:2}}>TREINO</div>
+        </div>
+        <div style={{...S.card,textAlign:"center",padding:sp.xxxl}}>
+          <div style={{fontSize:52,marginBottom:sp.md}}>🛌</div>
+          <div style={{fontFamily:font.display,fontSize:26,letterSpacing:3,marginBottom:sp.sm}}>DIA DE DESCANSO</div>
+          <div style={{fontSize:13,color:C.sub,lineHeight:1.6}}>Recuperação é parte do treino. Seu corpo cresce agora.</div>
+        </div>
+        <Spc h={80}/>
+      </div>
+    );
+  }
+
+  // ── EXERCÍCIO INDIVIDUAL ──
+  if (vista === "ex" && sel) {
+    const ex    = sel.exercicios[exIdx];
     const total = sel.exercicios.length;
-    const progEx = ((exIdx+1)/total)*100;
+    const progEx = ((exIdx + 1) / total) * 100;
 
     return (
-      <div style={cs.screen}>
+      <div style={S.screen}>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",paddingTop:sp.xl,marginBottom:sp.md}}>
-          <button style={cs.btnGhost} onClick={()=>setVista("det")}>← Voltar</button>
-          <span style={{fontSize:11,color:C.textMuted}}>{exIdx+1} / {total}</span>
+          <button style={S.ghost} onClick={() => setVista("det")}>← Voltar</button>
+          <span style={{fontSize:11,color:C.muted}}>{exIdx+1} / {total}</span>
         </div>
-
-        {/* workout progress */}
         <div style={{marginBottom:sp.xl}}>
-          <ProgressBar value={progEx} color={`linear-gradient(90deg,${usuario.cor},${usuario.corEscura})`} height={4} glow/>
+          <PBar value={progEx} color={`linear-gradient(90deg,${usuario.cor},${usuario.corEscura})`} h={4} glow/>
         </div>
 
         {/* exercise header */}
         <div style={{marginBottom:sp.lg}}>
           <Pill color={usuario.cor} bg={`${usuario.cor}18`}>{ex.musculo}</Pill>
-          <div style={{fontFamily:font.display,fontSize:32,letterSpacing:2,marginTop:sp.sm,marginBottom:2}}>{ex.nome}</div>
+          <div style={{fontFamily:font.display,fontSize:32,letterSpacing:2,marginTop:sp.sm,marginBottom:2}}>
+            {ex.nome}
+          </div>
         </div>
 
         {/* metrics */}
-        <div style={{
-          display:"grid",gridTemplateColumns:"repeat(4,1fr)",
-          gap:sp.sm,marginBottom:sp.lg,
-        }}>
-          {[["Séries",ex.series],["Reps",ex.reps],["Descanso",ex.descanso+"s"],["Kcal","~"+(ex.kcal*ex.series)]].map(([l,v])=>(
-            <div key={l} style={{...cs.metricBox,background:C.surfaceHigh,borderRadius:r.md}}>
-              <span style={{fontFamily:font.display,fontSize:22,color:usuario.cor,lineHeight:1}}>{v}</span>
-              <span style={{fontSize:9,color:C.textMuted,letterSpacing:.5,textTransform:"uppercase"}}>{l}</span>
+        <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:sp.sm,marginBottom:sp.lg}}>
+          {[["Séries",ex.series],["Reps",ex.reps],["Descanso",ex.descanso+"s"],["~Kcal","~"+(ex.kcal*ex.series)]].map(([l,v]) => (
+            <div key={l} style={{background:C.surfaceHi,borderRadius:rad.md,padding:"12px 0",
+              display:"flex",flexDirection:"column",alignItems:"center",gap:3}}>
+              <span style={{fontFamily:font.display,fontSize:20,color:usuario.cor,lineHeight:1}}>{v}</span>
+              <span style={{fontSize:9,color:C.muted,letterSpacing:.5,textTransform:"uppercase"}}>{l}</span>
             </div>
           ))}
         </div>
@@ -928,43 +770,33 @@ function Treino({ usuario, treinos, med }) {
         {/* video */}
         <VideoCard vid={ex.vid} nome={ex.nome} cor={usuario.cor} corGlow={usuario.corGlow}/>
 
-        {/* info cards */}
+        {/* tips */}
         <div style={{display:"flex",flexDirection:"column",gap:sp.sm,marginBottom:sp.lg}}>
           {[
-            {ic:"⚡",label:"EXECUÇÃO CORRETA",color:C.success,txt:ex.exec,bg:`${C.success}0A`},
-            {ic:"⚠️",label:"ERROS COMUNS",   color:C.danger, txt:ex.erro, bg:`${C.danger}0A`},
-            {ic:"🫁",label:"RESPIRAÇÃO",       color:C.info,   txt:ex.resp, bg:`${C.info}0A`},
-          ].map(d=>(
-            <div key={d.label} style={{
-              background:d.bg,borderRadius:r.lg,
-              padding:sp.md,
-              border:`1px solid ${d.color}22`,
-            }}>
-              <div style={{...cs.label,color:d.color,marginBottom:sp.xs}}>{d.ic} {d.label}</div>
-              <p style={{fontSize:13,color:C.textSub,margin:0,lineHeight:1.65}}>{d.txt}</p>
+            {ic:"⚡",lbl:"EXECUÇÃO",cor:C.ok,  bg:`${C.ok}0A`,  txt:ex.exec},
+            {ic:"⚠️",lbl:"ERROS",   cor:C.danger,bg:`${C.danger}0A`,txt:ex.erro},
+            {ic:"🫁",lbl:"RESPIRAÇÃO",cor:C.info,bg:`${C.info}0A`,txt:ex.resp},
+          ].map(d => (
+            <div key={d.lbl} style={{background:d.bg,borderRadius:rad.lg,padding:sp.md,border:`1px solid ${d.cor}20`}}>
+              <div style={{fontSize:10,color:d.cor,fontWeight:700,letterSpacing:1.5,marginBottom:4}}>{d.ic} {d.lbl}</div>
+              <p style={{fontSize:13,color:C.sub,margin:0,lineHeight:1.65}}>{d.txt}</p>
             </div>
           ))}
         </div>
 
         {/* sets tracker */}
-        <div style={{...cs.card,marginBottom:sp.md}}>
-          <Label>MARQUE CADA SÉRIE</Label>
+        <div style={{...S.card,marginBottom:sp.md}}>
+          <Lbl>MARQUE CADA SÉRIE</Lbl>
           <div style={{display:"flex",gap:sp.sm,marginTop:sp.sm}}>
-            {[...Array(ex.series)].map((_,si)=>{
-              const k=`${exIdx}-${si}`;
-              const done=feitos[k];
+            {[...Array(ex.series)].map((_,si) => {
+              const done = feitos[`${exIdx}-${si}`];
               return (
-                <button key={si} className="tap-scale"
-                  style={{
-                    flex:1,padding:"16px 0",
-                    borderRadius:r.md,
+                <button key={si} className="tap"
+                  style={{flex:1,padding:"15px 0",borderRadius:rad.md,
                     border:`1.5px solid ${done?usuario.cor:C.border}`,
-                    background: done ? `linear-gradient(135deg,${usuario.cor},${usuario.corEscura})` : C.surfaceHigh,
-                    cursor:"pointer",fontSize:17,fontWeight:700,
-                    color:done?"#fff":C.textSub,
-                    transition:"all .15s",
-                  }}
-                  onClick={()=>{ toggleSet(exIdx,si); if(!done) startTimer(ex.descanso); }}>
+                    background:done?`linear-gradient(135deg,${usuario.cor},${usuario.corEscura})`:C.surfaceHi,
+                    cursor:"pointer",fontSize:17,fontWeight:700,color:done?"#fff":C.sub}}
+                  onClick={() => { toggleSet(exIdx,si); if(!done) startTimer(ex.descanso); }}>
                   {done?"✓":si+1}
                 </button>
               );
@@ -972,53 +804,42 @@ function Treino({ usuario, treinos, med }) {
           </div>
         </div>
 
-        {/* rest timer */}
+        {/* timer */}
         {timer > 0 && (
-          <div style={{
-            ...cs.card,
-            textAlign:"center",padding:sp.xl,
+          <div style={{...S.card,textAlign:"center",padding:sp.xl,
             border:`1.5px solid ${timer<=10?C.danger:usuario.cor}44`,
-            background: timer<=10 ? `${C.danger}08` : `${usuario.cor}08`,
-            transition:"all .3s",
-            marginBottom:sp.md,
-          }}>
-            <Label color={timer<=10?C.danger:usuario.cor}>⏱ DESCANSO</Label>
-            <div style={{
-              fontFamily:font.display,fontSize:68,
-              color:timer<=10?C.danger:usuario.cor,
-              lineHeight:1,
-              textShadow:`0 0 24px ${timer<=10?C.danger+"60":usuario.corGlow}`,
-            }}>
-              {timer}<span style={{fontSize:22,opacity:.7}}>s</span>
+            background:timer<=10?`${C.danger}08`:`${usuario.cor}08`,marginBottom:sp.md}}>
+            <Lbl color={timer<=10?C.danger:usuario.cor}>⏱ DESCANSO</Lbl>
+            <div style={{fontFamily:font.display,fontSize:64,
+              color:timer<=10?C.danger:usuario.cor,lineHeight:1,
+              textShadow:`0 0 20px ${timer<=10?C.danger:usuario.cor}60`}}>
+              {timer}<span style={{fontSize:20,opacity:.7}}>s</span>
             </div>
             <div style={{margin:`${sp.md}px 0`}}>
-              <ProgressBar value={(timer/ex.descanso)*100} color={timer<=10?C.danger:usuario.cor} height={4}/>
+              <PBar value={(timer/ex.descanso)*100} color={timer<=10?C.danger:usuario.cor} h={4}/>
             </div>
-            <button className="tap-scale" onClick={()=>{setAtivo(false);setTimer(0);}}
-              style={{
-                background:usuario.cor,border:"none",
-                padding:"8px 24px",borderRadius:r.pill,
-                color:"#000",fontWeight:700,cursor:"pointer",
-                fontSize:12,letterSpacing:1,
-              }}>PULAR</button>
+            <button className="tap" onClick={() => { setAtivo(false); setTimer(0); }}
+              style={{background:usuario.cor,border:"none",padding:"8px 24px",
+                borderRadius:rad.pill,color:"#000",fontWeight:700,cursor:"pointer",fontSize:12}}>
+              PULAR
+            </button>
           </div>
         )}
 
-        {/* navigation */}
+        {/* nav */}
         <div style={{display:"flex",gap:sp.sm,marginBottom:80}}>
-          {exIdx>0 && (
-            <button className="tap-scale"
-              style={{flex:1,background:C.surface,border:`1px solid ${C.border}`,color:C.textSub,padding:"15px 0",borderRadius:r.md,cursor:"pointer",fontWeight:600,fontSize:13,fontFamily:font.body}}
-              onClick={()=>{ setExIdx(i=>i-1); setTimer(0); setAtivo(false); }}>← Anterior</button>
+          {exIdx > 0 && (
+            <button className="tap" style={{flex:1,background:C.surface,border:`1px solid ${C.border}`,
+              color:C.sub,padding:"15px 0",borderRadius:rad.md,cursor:"pointer",fontWeight:600,
+              fontSize:13,fontFamily:font.body}}
+              onClick={() => { setExIdx(i => i-1); setTimer(0); setAtivo(false); }}>← Anterior</button>
           )}
-          {exIdx<total-1 ? (
-            <button className="tap-scale"
-              style={{...cs.btn,flex:2,background:`linear-gradient(135deg,${usuario.cor},${usuario.corEscura})`,marginBottom:0}}
-              onClick={()=>{ setExIdx(i=>i+1); startTimer(ex.descanso); }}>Próximo →</button>
+          {exIdx < total-1 ? (
+            <button className="tap" style={{...S.btn,flex:2,background:`linear-gradient(135deg,${usuario.cor},${usuario.corEscura})`,marginBottom:0}}
+              onClick={() => { setExIdx(i => i+1); startTimer(ex.descanso); }}>Próximo →</button>
           ) : (
-            <button className="tap-scale"
-              style={{...cs.btn,flex:2,background:"linear-gradient(135deg,#16A34A,#14532D)",marginBottom:0}}
-              onClick={()=>{ setVista("lista"); setSel(null); setFeitos({}); setExIdx(0); }}>
+            <button className="tap" style={{...S.btn,flex:2,background:"linear-gradient(135deg,#16A34A,#14532D)",marginBottom:0}}
+              onClick={() => { setVista("det"); setFeitos({}); setExIdx(0); }}>
               🎉 TREINO CONCLUÍDO!
             </button>
           )}
@@ -1027,25 +848,28 @@ function Treino({ usuario, treinos, med }) {
     );
   }
 
-  // ── DETAIL VIEW ──
-  if (vista==="det" && sel) {
-    const totalKcal = sel.exercicios.reduce((a,e)=>a+e.kcal*e.series,0);
+  // ── DETALHE DO TREINO (lista de exercícios) ──
+  if (vista === "det" && sel) {
+    const totalKcal = sel.exercicios.reduce((a,e) => a + e.kcal * e.series, 0);
+    // Sort: non-cardio first, cardio last
+    const principais = sel.exercicios.filter(e => e.musculo !== "Cardio" && e.musculo !== "Cardio Geral" && e.musculo !== "Cardio Total" && e.musculo !== "Cardio + Pernas");
+    const cardios    = sel.exercicios.filter(e => e.musculo === "Cardio" || e.musculo === "Cardio Geral" || e.musculo === "Cardio Total" || e.musculo === "Cardio + Pernas");
+    const ordenados  = [...principais, ...cardios];
+
     return (
-      <div style={cs.screen}>
-        <div style={{paddingTop:sp.xl,paddingBottom:sp.md}}>
-          <button style={cs.btnGhost} onClick={()=>setVista("lista")}>← Treinos</button>
+      <div style={S.screen}>
+        <div style={{paddingTop:sp.xl,paddingBottom:sp.sm}}>
+          <button style={S.ghost} onClick={() => setVista("rest")}>← Início</button>
         </div>
 
-        {/* workout hero */}
-        <div style={{
-          background:`linear-gradient(135deg,${usuario.cor}12,${C.surface})`,
-          borderRadius:r.xl,padding:sp.xl,
-          marginBottom:sp.lg,
-          border:`1px solid ${usuario.cor}28`,
-        }}>
+        {/* hero */}
+        <div style={{background:`linear-gradient(135deg,${usuario.cor}12,${C.surface})`,
+          borderRadius:rad.xl,padding:sp.xl,marginBottom:sp.lg,border:`1px solid ${usuario.cor}28`}}>
           <Pill color={usuario.cor} bg={`${usuario.cor}18`}>{sel.dia}</Pill>
-          <div style={{fontFamily:font.display,fontSize:28,letterSpacing:2,marginTop:sp.sm,marginBottom:4}}>{sel.nome}</div>
-          <div style={{fontSize:13,color:C.textSub,marginBottom:sp.md}}>{sel.foco}</div>
+          <div style={{fontFamily:font.display,fontSize:28,letterSpacing:2,marginTop:sp.sm,marginBottom:4}}>
+            {sel.nome}
+          </div>
+          <div style={{fontSize:13,color:C.sub,marginBottom:sp.md}}>{sel.foco}</div>
           <div style={{display:"flex",gap:sp.sm,flexWrap:"wrap"}}>
             <Pill>⏱ {sel.duracao}</Pill>
             <Pill>🔥 ~{totalKcal}kcal</Pill>
@@ -1053,163 +877,65 @@ function Treino({ usuario, treinos, med }) {
           </div>
         </div>
 
-        {/* warmup */}
-        <div style={{
-          background:`${C.success}0A`,borderRadius:r.lg,
-          padding:sp.md,marginBottom:sp.sm,
-          border:`1px solid ${C.success}22`,
-        }}>
-          <Label color={C.success}>🔆 AQUECIMENTO</Label>
-          <div style={{fontSize:13,color:C.textSub,lineHeight:1.6}}>{sel.aquecimento}</div>
+        {/* aquecimento */}
+        <div style={{background:`${C.ok}0A`,borderRadius:rad.lg,padding:sp.md,
+          marginBottom:sp.sm,border:`1px solid ${C.ok}20`}}>
+          <Lbl color={C.ok}>🔆 AQUECIMENTO</Lbl>
+          <div style={{fontSize:13,color:C.sub,lineHeight:1.6}}>{sel.aquecimento}</div>
         </div>
 
-        {/* exercise list */}
-        {sel.exercicios.map((ex,i)=>(
-          <div key={i} className="tap-scale"
-            onClick={()=>{ setExIdx(i); setVista("ex"); }}
-            style={{
-              ...cs.card,cursor:"pointer",
-              display:"flex",alignItems:"center",gap:sp.md,
-              borderLeft:`3px solid ${usuario.cor}66`,
-              marginBottom:sp.sm,
-              transition:"border-color .15s",
-            }}>
-            <div style={{
-              width:30,height:30,borderRadius:"50%",
-              background:`${usuario.cor}18`,flexShrink:0,
-              display:"flex",alignItems:"center",justifyContent:"center",
-              fontSize:12,fontWeight:700,color:usuario.cor,
-            }}>{i+1}</div>
-            <div style={{flex:1}}>
-              <div style={{fontSize:14,fontWeight:600,marginBottom:2}}>{ex.nome}</div>
-              <div style={{fontSize:11,color:C.textMuted}}>{ex.series}×{ex.reps} · {ex.descanso}s descanso</div>
-              <Pill color={usuario.cor} bg={`${usuario.cor}15`}>{ex.musculo}</Pill>
+        {/* exercise list — cardio always last */}
+        {ordenados.map((ex,i) => {
+          const isCardio = cardios.includes(ex);
+          const realIdx  = sel.exercicios.indexOf(ex);
+          return (
+            <div key={i}>
+              {isCardio && i === principais.length && (
+                <div style={{background:`${C.info}0A`,borderRadius:rad.lg,padding:sp.md,
+                  marginBottom:sp.sm,marginTop:sp.sm,border:`1px solid ${C.info}20`}}>
+                  <Lbl color={C.info}>🏃 CARDIO FINAL</Lbl>
+                </div>
+              )}
+              <div className="tap"
+                onClick={() => { setExIdx(realIdx); setVista("ex"); }}
+                style={{...S.card,cursor:"pointer",display:"flex",alignItems:"center",
+                  gap:sp.md,borderLeft:`3px solid ${isCardio?C.info:usuario.cor}66`,marginBottom:sp.sm}}>
+                <div style={{width:30,height:30,borderRadius:"50%",background:`${isCardio?C.info:usuario.cor}18`,
+                  flexShrink:0,display:"flex",alignItems:"center",justifyContent:"center",
+                  fontSize:12,fontWeight:700,color:isCardio?C.info:usuario.cor}}>{i+1}</div>
+                <div style={{flex:1}}>
+                  <div style={{fontSize:14,fontWeight:600,marginBottom:2}}>{ex.nome}</div>
+                  <div style={{fontSize:11,color:C.muted,marginBottom:4}}>
+                    {ex.series}×{ex.reps} · {ex.descanso > 0 ? ex.descanso+"s desc." : "contínuo"}
+                  </div>
+                  <Pill color={isCardio?C.info:usuario.cor} bg={`${isCardio?C.info:usuario.cor}15`}>{ex.musculo}</Pill>
+                </div>
+                <div style={{textAlign:"right",flexShrink:0}}>
+                  <div style={{fontSize:11,color:C.muted}}>{ex.kcal*ex.series}kcal</div>
+                  <span style={{color:C.muted,fontSize:18}}>›</span>
+                </div>
+              </div>
             </div>
-            <div style={{textAlign:"right",flexShrink:0}}>
-              <div style={{fontSize:11,color:C.textMuted}}>{ex.kcal*ex.series}kcal</div>
-              <span style={{color:C.textMuted,fontSize:18}}>›</span>
-            </div>
-          </div>
-        ))}
+          );
+        })}
 
-        {/* cooldown */}
-        <div style={{
-          background:`${C.info}0A`,borderRadius:r.lg,
-          padding:sp.md,marginBottom:sp.lg,
-          border:`1px solid ${C.info}22`,
-        }}>
-          <Label color={C.info}>🌙 DESAQUECIMENTO</Label>
-          <div style={{fontSize:13,color:C.textSub,lineHeight:1.6}}>{sel.desaquecimento}</div>
+        {/* desaquecimento */}
+        <div style={{background:`${C.info}0A`,borderRadius:rad.lg,padding:sp.md,
+          marginBottom:sp.lg,border:`1px solid ${C.info}20`}}>
+          <Lbl color={C.info}>🌙 DESAQUECIMENTO</Lbl>
+          <div style={{fontSize:13,color:C.sub,lineHeight:1.6}}>{sel.desaquecimento}</div>
         </div>
 
-        {/* ── CARDIO DO DIA ── */}
-        <CardioInline usuario={usuario} med={med}/>
-
-        <button className="tap-scale"
-          style={{...cs.btn,background:`linear-gradient(135deg,${usuario.cor},${usuario.corEscura})`,marginBottom:80}}
-          onClick={()=>{ setExIdx(0); setVista("ex"); }}>
+        <button className="tap"
+          style={{...S.btn,background:`linear-gradient(135deg,${usuario.cor},${usuario.corEscura})`,marginBottom:80}}
+          onClick={() => { setExIdx(0); setVista("ex"); }}>
           ▶ INICIAR TREINO
         </button>
       </div>
     );
   }
 
-  // ── TODAY VIEW (default) ──
-  const diaIdxT = DIAS_TREINO[new Date().getDay()];
-  const treinoHoje2 = diaIdxT !== null ? Object.values(treinos)[diaIdxT] : null;
-
-  // Rest day
-  if (!treinoHoje2 && vista === "lista") {
-    return (
-      <div style={cs.screen}>
-        <div style={cs.pageHead}>
-          <div style={{fontFamily:font.display,fontSize:34,letterSpacing:4,marginBottom:2}}>TREINO</div>
-        </div>
-        <div style={{...cs.card,textAlign:"center",padding:sp.xxxl}}>
-          <div style={{fontSize:52,marginBottom:sp.md}}>🛌</div>
-          <div style={{fontFamily:font.display,fontSize:26,letterSpacing:3,marginBottom:sp.sm}}>DESCANSO</div>
-          <div style={{fontSize:13,color:C.textSub,lineHeight:1.6}}>
-            Hoje é dia de recuperação. Seu corpo cresce agora.
-          </div>
-        </div>
-        <Spacer h={80}/>
-      </div>
-    );
-  }
-
-  // If vista is "det" but sel not set yet, use today's workout
-  const treinoAtual = sel || treinoHoje2;
-
-  if (vista === "det" && treinoAtual) {
-    // re-use the detail view with today's workout
-    const totalKcal = treinoAtual.exercicios.reduce((a,e)=>a+e.kcal*e.series,0);
-    return (
-      <div style={cs.screen}>
-        <div style={{paddingTop:sp.xl,paddingBottom:sp.md}}>
-          <button style={cs.btnGhost} onClick={()=>{ setSel(null); setVista("lista"); setExIdx(0); }}>← Treinos</button>
-        </div>
-        <div style={{
-          background:`linear-gradient(135deg,${usuario.cor}12,${C.surface})`,
-          borderRadius:r.xl,padding:sp.xl,marginBottom:sp.lg,
-          border:`1px solid ${usuario.cor}28`,
-        }}>
-          <Pill color={usuario.cor} bg={`${usuario.cor}18`}>{treinoAtual.dia}</Pill>
-          <div style={{fontFamily:font.display,fontSize:28,letterSpacing:2,marginTop:sp.sm,marginBottom:4}}>{treinoAtual.nome}</div>
-          <div style={{fontSize:13,color:C.textSub,marginBottom:sp.md}}>{treinoAtual.foco}</div>
-          <div style={{display:"flex",gap:sp.sm,flexWrap:"wrap"}}>
-            <Pill>⏱ {treinoAtual.duracao}</Pill>
-            <Pill>🔥 ~{totalKcal}kcal</Pill>
-            <Pill>💪 {treinoAtual.exercicios.length} ex.</Pill>
-          </div>
-        </div>
-        <div style={{background:`${C.success}0A`,borderRadius:r.lg,padding:sp.md,marginBottom:sp.sm,border:`1px solid ${C.success}22`}}>
-          <Label color={C.success}>🔆 AQUECIMENTO</Label>
-          <div style={{fontSize:13,color:C.textSub,lineHeight:1.6}}>{treinoAtual.aquecimento}</div>
-        </div>
-        {treinoAtual.exercicios.map((ex,i)=>(
-          <div key={i} className="tap-scale"
-            onClick={()=>{ setExIdx(i); setVista("ex"); setSel(treinoAtual); }}
-            style={{...cs.card,cursor:"pointer",display:"flex",alignItems:"center",gap:sp.md,borderLeft:`3px solid ${usuario.cor}66`,marginBottom:sp.sm}}>
-            <div style={{width:30,height:30,borderRadius:"50%",background:`${usuario.cor}18`,flexShrink:0,display:"flex",alignItems:"center",justifyContent:"center",fontSize:12,fontWeight:700,color:usuario.cor}}>{i+1}</div>
-            <div style={{flex:1}}>
-              <div style={{fontSize:14,fontWeight:600,marginBottom:2}}>{ex.nome}</div>
-              <div style={{fontSize:11,color:C.textMuted}}>{ex.series}×{ex.reps} · {ex.descanso}s descanso</div>
-              <Pill color={usuario.cor} bg={`${usuario.cor}15`}>{ex.musculo}</Pill>
-            </div>
-            <div style={{textAlign:"right",flexShrink:0}}>
-              <div style={{fontSize:11,color:C.textMuted}}>{ex.kcal*ex.series}kcal</div>
-              <span style={{color:C.textMuted,fontSize:18}}>›</span>
-            </div>
-          </div>
-        ))}
-        <div style={{background:`${C.info}0A`,borderRadius:r.lg,padding:sp.md,marginBottom:sp.lg,border:`1px solid ${C.info}22`}}>
-          <Label color={C.info}>🌙 DESAQUECIMENTO</Label>
-          <div style={{fontSize:13,color:C.textSub,lineHeight:1.6}}>{treinoAtual.desaquecimento}</div>
-        </div>
-        <CardioInline usuario={usuario} med={med}/>
-        <button className="tap-scale"
-          style={{...cs.btn,background:`linear-gradient(135deg,${usuario.cor},${usuario.corEscura})`,marginBottom:80}}
-          onClick={()=>{ setSel(treinoAtual); setExIdx(0); setVista("ex"); }}>
-          ▶ INICIAR TREINO
-        </button>
-      </div>
-    );
-  }
-
-  // Rest day or fallback
-  return (
-    <div style={cs.screen}>
-      <div style={cs.pageHead}>
-        <div style={{fontFamily:font.display,fontSize:34,letterSpacing:4,marginBottom:2}}>TREINO</div>
-      </div>
-      <div style={{...cs.card,textAlign:"center",padding:sp.xxxl}}>
-        <div style={{fontSize:52,marginBottom:sp.md}}>🛌</div>
-        <div style={{fontFamily:font.display,fontSize:26,letterSpacing:3,marginBottom:sp.sm}}>DESCANSO</div>
-        <div style={{fontSize:13,color:C.textSub,lineHeight:1.6}}>Hoje é dia de recuperação. Descanse bem.</div>
-      </div>
-      <Spacer h={80}/>
-    </div>
-  );
+  return <div style={{height:80}}/>;
 }
 
 // ════════════════════════════════════════════════════════════════════
@@ -1217,63 +943,48 @@ function Treino({ usuario, treinos, med }) {
 // ════════════════════════════════════════════════════════════════════
 function VideoCard({ vid, nome, cor, corGlow }) {
   const [clicado, setClicado] = useState(false);
-  const url = `https://www.youtube.com/watch?v=${vid}`;
+  const url      = `https://www.youtube.com/watch?v=${vid}`;
   const thumbMax = `https://img.youtube.com/vi/${vid}/maxresdefault.jpg`;
-  const thumbFallback = `https://img.youtube.com/vi/${vid}/hqdefault.jpg`;
+  const thumbFb  = `https://img.youtube.com/vi/${vid}/hqdefault.jpg`;
 
   return (
-    <div style={{borderRadius:r.lg,overflow:"hidden",marginBottom:sp.lg,background:C.surfaceHigh,minHeight:180}}>
+    <div style={{borderRadius:rad.lg,overflow:"hidden",marginBottom:sp.lg,background:C.surfaceHi,minHeight:180}}>
       {!clicado ? (
-        <div style={{position:"relative",cursor:"pointer",minHeight:180}} onClick={()=>setClicado(true)}>
-          <img src={thumbMax} alt={nome}
-            onError={e=>{ e.target.src=thumbFallback; }}
+        <div style={{position:"relative",cursor:"pointer",minHeight:180}} onClick={() => setClicado(true)}>
+          <img src={thumbMax} alt={nome} onError={e => { e.target.src = thumbFb; }}
             style={{width:"100%",height:180,objectFit:"cover",display:"block"}}/>
-          <div style={{
-            position:"absolute",inset:0,
-            background:"linear-gradient(to top,rgba(0,0,0,.7),rgba(0,0,0,.1))",
-            display:"flex",flexDirection:"column",
-            alignItems:"center",justifyContent:"center",gap:sp.sm,
-          }}>
-            <div style={{
-              width:64,height:64,borderRadius:"50%",
+          <div style={{position:"absolute",inset:0,background:"linear-gradient(to top,rgba(0,0,0,.7),rgba(0,0,0,.1))",
+            display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:sp.sm}}>
+            <div style={{width:64,height:64,borderRadius:"50%",
               background:`linear-gradient(135deg,${cor},${cor}88)`,
               display:"flex",alignItems:"center",justifyContent:"center",
-              boxShadow:`0 0 28px ${corGlow}`,
-              animation:"pulseGlow 2s ease-in-out infinite",
-            }}>
+              boxShadow:`0 0 28px ${corGlow}`,animation:"gPulse 2s ease-in-out infinite"}}>
               <span style={{fontSize:28,marginLeft:5}}>▶</span>
             </div>
             <span style={{color:"#fff",fontSize:11,fontWeight:700,letterSpacing:2}}>VER DEMONSTRAÇÃO</span>
           </div>
-          <div style={{
-            position:"absolute",top:10,right:10,
-            background:"#FF0000",borderRadius:r.sm,
-            padding:"2px 7px",fontSize:10,fontWeight:700,color:"#fff",
-          }}>▶ YouTube</div>
+          <div style={{position:"absolute",top:10,right:10,background:"#FF0000",
+            borderRadius:rad.sm,padding:"2px 7px",fontSize:10,fontWeight:700,color:"#fff"}}>
+            ▶ YouTube
+          </div>
         </div>
       ) : (
-        <div style={{
-          display:"flex",flexDirection:"column",
-          alignItems:"center",justifyContent:"center",
+        <div style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",
           minHeight:180,gap:sp.lg,padding:sp.xl,
-          background:`linear-gradient(135deg,${cor}0D,${C.surfaceHigh})`,
-        }}>
-          <p style={{color:C.textSub,fontSize:13,textAlign:"center",lineHeight:1.6,margin:0}}>
+          background:`linear-gradient(135deg,${cor}0D,${C.surfaceHi})`}}>
+          <p style={{color:C.sub,fontSize:13,textAlign:"center",lineHeight:1.6,margin:0}}>
             Toque abaixo para ver a demonstração no YouTube
           </p>
           <a href={url} target="_blank" rel="noopener noreferrer"
-            style={{
-              display:"flex",alignItems:"center",gap:sp.sm,
-              padding:"13px 28px",borderRadius:r.pill,
-              background:"linear-gradient(135deg,#EF4444,#991B1B)",
-              color:"#fff",fontWeight:700,fontSize:13,
-              letterSpacing:1,textDecoration:"none",
-              boxShadow:"0 4px 18px #EF444455",
-            }}>
+            style={{display:"flex",alignItems:"center",gap:sp.sm,padding:"13px 28px",
+              borderRadius:rad.pill,background:"linear-gradient(135deg,#EF4444,#991B1B)",
+              color:"#fff",fontWeight:700,fontSize:13,letterSpacing:1,textDecoration:"none",
+              boxShadow:"0 4px 18px #EF444455"}}>
             <span>▶</span> Abrir no YouTube
           </a>
-          <button onClick={()=>setClicado(false)}
-            style={{background:"none",border:`1px solid ${C.border}`,borderRadius:r.sm,color:C.textMuted,fontSize:12,cursor:"pointer",padding:"6px 16px",fontFamily:font.body}}>
+          <button className="tap" onClick={() => setClicado(false)}
+            style={{background:"none",border:`1px solid ${C.border}`,borderRadius:rad.sm,
+              color:C.muted,fontSize:12,cursor:"pointer",padding:"6px 16px",fontFamily:font.body}}>
             ← Fechar
           </button>
         </div>
@@ -1282,308 +993,123 @@ function VideoCard({ vid, nome, cor, corGlow }) {
   );
 }
 
-
 // ════════════════════════════════════════════════════════════════════
-// CARDIO INLINE — bloco dentro do detalhe do treino
+// SEMANA — planejamento semanal premium
 // ════════════════════════════════════════════════════════════════════
-function CardioInline({ usuario, med }) {
-  const [aberto,     setAberto]  = useState(false);
-  const [tipo,       setTipo]    = useState("caminhada");
-  const [minutos,    setMinutos] = useState(30);
-  const [intensidade,setIntens]  = useState("moderado");
-  const [salvo,      setSalvo]   = useState(false);
-
-  const MET = {
-    caminhada:{ leve:3.5,moderado:4.5,intenso:6.0 },
-    esteira:  { leve:5.0,moderado:7.5,intenso:9.5 },
-    bicicleta:{ leve:4.0,moderado:6.0,intenso:8.5 },
-    escada:   { leve:6.0,moderado:8.5,intenso:11.0 },
-    eliptico: { leve:4.5,moderado:6.5,intenso:8.5 },
-  };
-  const TIPOS = [
-    {id:"caminhada",ic:"🚶",lb:"Caminhada"},
-    {id:"esteira",  ic:"🏃",lb:"Esteira"},
-    {id:"bicicleta",ic:"🚴",lb:"Bicicleta"},
-    {id:"escada",   ic:"🪜",lb:"Escada"},
-    {id:"eliptico", ic:"🔄",lb:"Elíptico"},
+function Semana({ usuario, treinos, setTab }) {
+  const diasSemana = [
+    { d:"Dom", label:"Domingo",    idx:null },
+    { d:"Seg", label:"Segunda",    idx:0    },
+    { d:"Ter", label:"Terça",      idx:1    },
+    { d:"Qua", label:"Quarta",     idx:2    },
+    { d:"Qui", label:"Quinta",     idx:3    },
+    { d:"Sex", label:"Sexta",      idx:null },
+    { d:"Sáb", label:"Sábado",     idx:4    },
   ];
-
-  const met  = MET[tipo]?.[intensidade] || 5;
-  const kcal = Math.round((met * (med?.peso || 100) * minutos) / 60);
-
-  const salvar = () => {
-    const sessoes = DB.get("cardio_"+usuario.id, []);
-    const nova = {
-      tipo: TIPOS.find(t=>t.id===tipo)?.lb,
-      min: minutos, kcal,
-      data: "Hoje",
-      intensidade: intensidade[0].toUpperCase()+intensidade.slice(1),
-    };
-    DB.set("cardio_"+usuario.id, [nova, ...sessoes.slice(0,19)]);
-    setSalvo(true);
-    setTimeout(() => setAberto(false), 1500);
-  };
+  const hojeNum = new Date().getDay();
+  const tList   = Object.values(treinos);
 
   return (
-    <div style={{...cs.card, border:`1px solid ${usuario.cor}22`, marginBottom:sp.md}}>
-      {/* header — toggle */}
-      <button
-        onClick={() => setAberto(a => !a)}
-        style={{
-          width:"100%", background:"none", border:"none",
-          display:"flex", justifyContent:"space-between", alignItems:"center",
-          cursor:"pointer", padding:0, fontFamily:font.body,
-        }}>
-        <div style={{display:"flex",alignItems:"center",gap:sp.sm}}>
-          <span style={{fontSize:22}}>🏃</span>
-          <div style={{textAlign:"left"}}>
-            <div style={{fontSize:14,fontWeight:700,color:C.text}}>Cardio do Dia</div>
-            <div style={{fontSize:11,color:C.textMuted}}>Registrar sessão aeróbica</div>
-          </div>
-        </div>
-        <span style={{
-          color:usuario.cor, fontSize:18,
-          transform: aberto ? "rotate(180deg)" : "rotate(0deg)",
-          transition:"transform .2s",
-          display:"inline-block",
-        }}>▾</span>
-      </button>
-
-      {/* expandable content */}
-      {aberto && (
-        <div style={{marginTop:sp.lg}}>
-          {/* type picker */}
-          <div style={{display:"flex",gap:sp.sm,marginBottom:sp.md,overflowX:"auto",paddingBottom:2}}>
-            {TIPOS.map(t=>(
-              <button key={t.id} className="tap-scale"
-                onClick={()=>setTipo(t.id)}
-                style={{
-                  flexShrink:0,
-                  background: tipo===t.id ? `${usuario.cor}18` : C.surfaceHigh,
-                  border:`1px solid ${tipo===t.id ? usuario.cor : C.border}`,
-                  borderRadius:r.md, padding:"8px 10px",
-                  cursor:"pointer", display:"flex",
-                  flexDirection:"column", alignItems:"center", gap:3,
-                  minWidth:60, transition:"all .15s",
-                }}>
-                <span style={{fontSize:20}}>{t.ic}</span>
-                <span style={{fontSize:9,color:tipo===t.id?usuario.cor:C.textMuted,fontWeight:600}}>{t.lb}</span>
-              </button>
-            ))}
-          </div>
-
-          {/* duration slider */}
-          <div style={{marginBottom:sp.md}}>
-            <div style={{display:"flex",justifyContent:"space-between",marginBottom:sp.sm}}>
-              <Label>⏱ DURAÇÃO</Label>
-              <span style={{fontSize:15,fontWeight:700,color:usuario.cor,fontFamily:font.display}}>{minutos} min</span>
-            </div>
-            <input type="range" min={5} max={90} step={5} value={minutos}
-              onChange={e=>setMinutos(+e.target.value)}
-              style={{width:"100%",accentColor:usuario.cor,cursor:"pointer"}}/>
-            <div style={{display:"flex",justifyContent:"space-between",fontSize:10,color:C.textMuted,marginTop:3}}>
-              <span>5 min</span><span>90 min</span>
-            </div>
-          </div>
-
-          {/* intensity */}
-          <div style={{marginBottom:sp.lg}}>
-            <Label>⚡ INTENSIDADE</Label>
-            <div style={{display:"flex",gap:sp.sm,marginTop:sp.xs}}>
-              {[["leve","🟢"],["moderado","🟡"],["intenso","🔴"]].map(([v,ic])=>(
-                <button key={v} className="tap-scale"
-                  onClick={()=>setIntens(v)}
-                  style={{
-                    flex:1, padding:"10px 0", borderRadius:r.md,
-                    border:`1px solid ${intensidade===v?usuario.cor:C.border}`,
-                    background: intensidade===v
-                      ? `linear-gradient(135deg,${usuario.cor},${usuario.corEscura})`
-                      : C.surfaceHigh,
-                    cursor:"pointer", color:"#fff",
-                    fontSize:11, fontWeight:600,
-                    transition:"all .15s", fontFamily:font.body,
-                  }}>
-                  {ic} {v}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* kcal estimate */}
-          <div style={{
-            background:C.surfaceHigh, borderRadius:r.md,
-            padding:sp.md, textAlign:"center", marginBottom:sp.lg,
-          }}>
-            <span style={{fontFamily:font.display,fontSize:42,color:usuario.cor,letterSpacing:1}}>{kcal}</span>
-            <span style={{fontSize:13,color:C.textMuted}}> kcal estimadas</span>
-          </div>
-
-          <button className="tap-scale" onClick={salvar}
-            style={{
-              ...cs.btn, marginBottom:0,
-              background: salvo
-                ? "linear-gradient(135deg,#16A34A,#14532D)"
-                : `linear-gradient(135deg,${usuario.cor},${usuario.corEscura})`,
-            }}>
-            {salvo ? "✅ Cardio salvo!" : "✓ SALVAR CARDIO"}
-          </button>
-        </div>
-      )}
-    </div>
-  );
-}
-
-// ════════════════════════════════════════════════════════════════════
-// CARDIO
-// ════════════════════════════════════════════════════════════════════
-function Cardio({ usuario, med }) {
-  const [tipo,      setTipo]    = useState("caminhada");
-  const [minutos,   setMinutos] = useState(30);
-  const [intensidade,setIntens] = useState("moderado");
-  const [sessoes,   setSessoes] = useState(() => DB.get("cardio_"+usuario.id, [
-    { tipo:"Caminhada", min:25, kcal:155, data:"Ontem",  intensidade:"Moderado" },
-    { tipo:"Bicicleta", min:30, kcal:190, data:"3 dias", intensidade:"Moderado" },
-  ]));
-
-  const MET = {
-    caminhada:{ leve:3.5,moderado:4.5,intenso:6.0 },
-    esteira:  { leve:5.0,moderado:7.5,intenso:9.5 },
-    bicicleta:{ leve:4.0,moderado:6.0,intenso:8.5 },
-    escada:   { leve:6.0,moderado:8.5,intenso:11.0 },
-    eliptico: { leve:4.5,moderado:6.5,intenso:8.5 },
-  };
-
-  const met  = MET[tipo]?.[intensidade] || 5;
-  const kcal = Math.round((met * med.peso * minutos) / 60);
-
-  const TIPOS = [
-    {id:"caminhada",ic:"🚶",lb:"Caminhada"},
-    {id:"esteira",  ic:"🏃",lb:"Esteira"},
-    {id:"bicicleta",ic:"🚴",lb:"Bicicleta"},
-    {id:"escada",   ic:"🪜",lb:"Escada"},
-    {id:"eliptico", ic:"🔄",lb:"Elíptico"},
-  ];
-
-  const salvar = () => {
-    const nova = { tipo:TIPOS.find(t=>t.id===tipo)?.lb, min:minutos, kcal, data:"Hoje", intensidade:intensidade[0].toUpperCase()+intensidade.slice(1) };
-    const novas = [nova,...sessoes.slice(0,19)];
-    setSessoes(novas);
-    DB.set("cardio_"+usuario.id, novas);
-  };
-
-  const totalKcal = sessoes.reduce((a,s)=>a+s.kcal,0);
-  const totalMin  = sessoes.reduce((a,s)=>a+s.min,0);
-
-  return (
-    <div style={cs.screen}>
-      <div style={cs.pageHead}>
-        <div style={{fontFamily:font.display,fontSize:34,letterSpacing:4,marginBottom:2}}>CARDIO</div>
-        <div style={{fontSize:12,color:C.textMuted}}>Condicionamento aeróbico</div>
+    <div style={S.screen}>
+      <div style={S.pageHead}>
+        <div style={{fontFamily:font.display,fontSize:34,letterSpacing:4,marginBottom:2}}>SEMANA</div>
+        <div style={{fontSize:12,color:C.muted}}>{usuario.nome} · {usuario.frequencia}</div>
       </div>
 
-      {/* type picker */}
-      <div style={{display:"flex",gap:sp.sm,marginBottom:sp.lg,overflowX:"auto",paddingBottom:4}}>
-        {TIPOS.map(t=>(
-          <button key={t.id} className="tap-scale"
-            onClick={()=>setTipo(t.id)}
-            style={{
-              flexShrink:0,background: tipo===t.id?`${usuario.cor}18`:C.surface,
-              border:`1px solid ${tipo===t.id?usuario.cor:C.border}`,
-              borderRadius:r.lg,padding:"10px 12px",cursor:"pointer",
+      {/* week strip */}
+      <div style={{display:"flex",gap:sp.xs,marginBottom:sp.xl}}>
+        {diasSemana.map(({d,idx},i) => {
+          const isHoje  = i === hojeNum;
+          const temT    = idx !== null;
+          return (
+            <div key={d} style={{flex:1,borderRadius:rad.md,padding:"10px 0",
               display:"flex",flexDirection:"column",alignItems:"center",gap:4,
-              minWidth:68,transition:"all .15s",
-            }}>
-            <span style={{fontSize:22}}>{t.ic}</span>
-            <span style={{fontSize:10,color:tipo===t.id?usuario.cor:C.textMuted,fontWeight:600}}>{t.lb}</span>
-          </button>
-        ))}
+              background:isHoje?`${usuario.cor}18`:C.surfaceHi,
+              border:`1px solid ${isHoje?usuario.cor:C.border}`}}>
+              <span style={{fontSize:9,fontWeight:isHoje?700:400,color:isHoje?usuario.cor:C.muted}}>{d}</span>
+              <span style={{fontSize:15}}>{temT?"💪":"😴"}</span>
+            </div>
+          );
+        })}
       </div>
 
-      {/* config */}
-      <div style={cs.card}>
-        <div style={{marginBottom:sp.lg}}>
-          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:sp.sm}}>
-            <Label>⏱ DURAÇÃO</Label>
-            <span style={{fontSize:16,fontWeight:700,color:usuario.cor,fontFamily:font.display}}>{minutos} min</span>
-          </div>
-          <input type="range" min={5} max={120} step={5} value={minutos}
-            onChange={e=>setMinutos(+e.target.value)}
-            style={{width:"100%",accentColor:usuario.cor,cursor:"pointer"}}/>
-          <div style={{display:"flex",justifyContent:"space-between",fontSize:10,color:C.textMuted,marginTop:4}}>
-            <span>5 min</span><span>2 horas</span>
-          </div>
-        </div>
-        <div>
-          <Label>⚡ INTENSIDADE</Label>
-          <div style={{display:"flex",gap:sp.sm}}>
-            {[["leve","🟢"],["moderado","🟡"],["intenso","🔴"]].map(([v,ic])=>(
-              <button key={v} className="tap-scale"
-                onClick={()=>setIntens(v)}
-                style={{
-                  flex:1,padding:"11px 0",borderRadius:r.md,
-                  border:`1px solid ${intensidade===v?usuario.cor:C.border}`,
-                  background: intensidade===v ? `linear-gradient(135deg,${usuario.cor},${usuario.corEscura})` : C.surfaceHigh,
-                  cursor:"pointer",color:"#fff",fontSize:12,fontWeight:600,
-                  transition:"all .15s",fontFamily:font.body,
-                }}>
-                {ic} {v}
-              </button>
-            ))}
-          </div>
-        </div>
-      </div>
+      {/* workout cards */}
+      {diasSemana.filter(d => d.idx !== null).map(({label, idx}, i) => {
+        const t       = tList[idx];
+        const dNum    = [1,2,3,4,6][i]; // seg=1,ter=2,qua=3,qui=4,sab=6
+        const isHoje  = dNum === hojeNum;
+        const kcal    = t.exercicios.reduce((a,e) => a+e.kcal*e.series, 0);
+        const muscs   = [...new Set(t.exercicios.slice(0,3).map(e => e.musculo.split(" ")[0]))].join(" · ");
 
-      {/* calorie display */}
-      <div style={{
-        ...cs.card,
-        border:`1.5px solid ${usuario.cor}33`,
-        background:`linear-gradient(135deg,${usuario.cor}0A,${C.surface})`,
-        padding:sp.xxl,textAlign:"center",
-        marginBottom:sp.lg,
-      }}>
-        <div style={{fontSize:40,marginBottom:sp.sm}}>🔥</div>
-        <div style={{fontFamily:font.display,fontSize:64,color:usuario.cor,lineHeight:1,letterSpacing:2}}>{kcal}</div>
-        <div style={{fontSize:14,color:C.textSub,marginTop:sp.sm}}>kcal estimadas</div>
-        <div style={{fontSize:11,color:C.textMuted,marginTop:sp.xs,textTransform:"capitalize"}}>
-          {minutos}min · {tipo} · {intensidade} · {med.peso}kg
-        </div>
-      </div>
-
-      <button className="tap-scale"
-        onClick={salvar}
-        style={{...cs.btn,background:`linear-gradient(135deg,${usuario.cor},${usuario.corEscura})`}}>
-        ✓ SALVAR SESSÃO
-      </button>
-
-      {/* totals row */}
-      <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:sp.sm,marginBottom:sp.lg}}>
-        <Metric value={totalMin+"m"} label="Total min" color={usuario.cor}/>
-        <Metric value={totalKcal} label="Kcal totais" color={C.warning}/>
-        <Metric value={sessoes.length} label="Sessões" color={C.success}/>
-      </div>
-
-      {/* history */}
-      <Label>HISTÓRICO</Label>
-      <div style={{marginTop:sp.sm}}>
-        {sessoes.map((s,i)=>(
-          <div key={i} style={{
-            ...cs.card,
-            display:"flex",justifyContent:"space-between",alignItems:"center",
-            borderLeft:`3px solid ${usuario.cor}55`,
-            padding:"12px 14px",marginBottom:sp.sm,
+        return (
+          <div key={label} style={{
+            ...S.card,
+            border:`1px solid ${isHoje?usuario.cor+"55":C.border}`,
+            background: isHoje?`linear-gradient(135deg,${usuario.cor}0D,${C.surface})`:C.surface,
+            marginBottom:sp.sm,
           }}>
-            <div>
-              <div style={{fontSize:14,fontWeight:600}}>{s.tipo}</div>
-              <div style={{fontSize:11,color:C.textMuted,marginTop:2}}>{s.data} · {s.intensidade}</div>
+            <div style={{display:"flex",alignItems:"flex-start",gap:sp.md}}>
+              {/* day badge */}
+              <div style={{width:52,height:52,borderRadius:rad.lg,flexShrink:0,
+                background:`${isHoje?usuario.cor:C.surfaceHi}`,
+                display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:1}}>
+                <div style={{fontFamily:font.display,fontSize:11,
+                  color:isHoje?"#000":usuario.cor,letterSpacing:1}}>{label.slice(0,3).toUpperCase()}</div>
+                <span style={{fontSize:20}}>💪</span>
+              </div>
+
+              {/* info */}
+              <div style={{flex:1}}>
+                <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:4}}>
+                  <div style={{fontFamily:font.display,fontSize:20,letterSpacing:1,color:isHoje?usuario.cor:C.text}}>
+                    {t.nome}
+                  </div>
+                  {isHoje && (
+                    <span style={{background:usuario.cor,color:"#000",fontSize:9,fontWeight:700,
+                      padding:"2px 8px",borderRadius:rad.pill,letterSpacing:1}}>HOJE</span>
+                  )}
+                </div>
+                <div style={{fontSize:12,color:C.sub,marginBottom:sp.sm}}>{t.foco}</div>
+                <div style={{display:"flex",gap:sp.xs,flexWrap:"wrap",marginBottom:sp.sm}}>
+                  <Pill>⏱ {t.duracao}</Pill>
+                  <Pill>🔥 ~{kcal}kcal</Pill>
+                  <Pill>💪 {t.exercicios.length} ex.</Pill>
+                </div>
+                {/* muscles */}
+                <div style={{fontSize:11,color:C.muted}}>{muscs}</div>
+              </div>
             </div>
-            <div style={{textAlign:"right"}}>
-              <div style={{color:usuario.cor,fontWeight:700,fontSize:14}}>{s.kcal} kcal</div>
-              <div style={{fontSize:11,color:C.textMuted}}>{s.min} min</div>
+
+            {/* exercise preview */}
+            <div style={{marginTop:sp.md}}>
+              <Div/>
+              {t.exercicios.slice(0,3).map((ex,i) => (
+                <div key={i} style={{display:"flex",alignItems:"center",gap:sp.sm,
+                  padding:"5px 0",borderBottom:i<2?`1px solid ${C.border}`:"none"}}>
+                  <span style={{width:18,height:18,borderRadius:"50%",
+                    background:`${usuario.cor}18`,display:"inline-flex",
+                    alignItems:"center",justifyContent:"center",
+                    fontSize:9,fontWeight:700,color:usuario.cor,flexShrink:0}}>{i+1}</span>
+                  <span style={{flex:1,fontSize:12,color:C.sub}}>{ex.nome}</span>
+                  <span style={{fontSize:11,color:C.muted}}>{ex.series}×{ex.reps}</span>
+                </div>
+              ))}
+              {t.exercicios.length > 3 && (
+                <div style={{fontSize:11,color:C.muted,marginTop:4}}>+{t.exercicios.length-3} exercícios</div>
+              )}
             </div>
+
+            {isHoje && (
+              <button className="tap"
+                style={{...S.btn,background:`linear-gradient(135deg,${usuario.cor},${usuario.corEscura})`,marginTop:sp.md,marginBottom:0}}
+                onClick={() => setTab("treino")}>
+                INICIAR TREINO HOJE →
+              </button>
+            )}
           </div>
-        ))}
-      </div>
-      <Spacer h={80}/>
+        );
+      })}
+      <Spc h={80}/>
     </div>
   );
 }
@@ -1593,11 +1119,11 @@ function Cardio({ usuario, med }) {
 // ════════════════════════════════════════════════════════════════════
 function Evolucao({ usuario, med, salvarMedida }) {
   const [editando, setEditando] = useState(false);
-  const [form,     setForm]     = useState({...med});
+  const [form,     setForm]     = useState({ ...med });
   const [hist]                  = useState(() => DB.get("hist_"+usuario.id, [
     { data:"Mai/25", peso:usuario.pesoInicial,   cintura:med.cintura+8 },
     { data:"Jun/25", peso:usuario.pesoInicial-3, cintura:med.cintura+4 },
-    { data:"Jul/25", peso:med.peso,              cintura:med.cintura },
+    { data:"Jul/25", peso:med.peso,              cintura:med.cintura   },
   ]));
 
   const imcV    = imc(med.peso, usuario.altura);
@@ -1605,97 +1131,91 @@ function Evolucao({ usuario, med, salvarMedida }) {
   const imcT    = imcTxt(imcV);
   const prog    = pct(med.peso, usuario.pesoInicial, usuario.pesoMeta);
   const perdido = (usuario.pesoInicial - med.peso).toFixed(1);
-  const maxP    = Math.max(...hist.map(h=>h.peso));
-  const minP    = Math.min(...hist.map(h=>h.peso));
-  const wRange  = Math.max(1, maxP-minP);
+  const maxP    = Math.max(...hist.map(h => h.peso));
+  const minP    = Math.min(...hist.map(h => h.peso));
+  const wRange  = Math.max(1, maxP - minP);
 
-  const salvar = () => { Object.entries(form).forEach(([k,v])=>salvarMedida(k,v)); setEditando(false); };
+  const salvar = () => { Object.entries(form).forEach(([k,v]) => salvarMedida(k, v)); setEditando(false); };
 
   return (
-    <div style={cs.screen}>
-      <div style={cs.pageHead}>
+    <div style={S.screen}>
+      <div style={S.pageHead}>
         <div style={{fontFamily:font.display,fontSize:34,letterSpacing:4,marginBottom:2}}>PROGRESSO</div>
-        <div style={{fontSize:12,color:C.textMuted}}>Acompanhe sua transformação</div>
+        <div style={{fontSize:12,color:C.muted}}>Acompanhe sua transformação</div>
       </div>
 
-      {/* IMC hero */}
-      <div style={{
-        ...cs.card,
-        border:`1px solid ${imcC}30`,
-        background:`linear-gradient(135deg,${imcC}0A,${C.surface})`,
-        marginBottom:sp.lg,
-      }}>
+      {/* IMC */}
+      <div style={{...S.card,border:`1px solid ${imcC}30`,background:`linear-gradient(135deg,${imcC}0A,${C.surface})`}}>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
           <div>
-            <Label>IMC ATUAL</Label>
-            <div style={{fontFamily:font.display,fontSize:58,color:imcC,lineHeight:1,letterSpacing:1}}>{imcV}</div>
+            <Lbl>IMC ATUAL</Lbl>
+            <div style={{fontFamily:font.display,fontSize:56,color:imcC,lineHeight:1,letterSpacing:1}}>{imcV}</div>
             <Pill color={imcC} bg={`${imcC}18`}>{imcT}</Pill>
           </div>
           <div style={{textAlign:"right"}}>
-            <div style={{fontSize:10,color:C.textMuted,marginBottom:2}}>ALTURA</div>
-            <div style={{fontFamily:font.display,fontSize:24,color:C.textSub}}>{usuario.altura}cm</div>
-            <Spacer h={sp.md}/>
-            <div style={{fontSize:10,color:C.textMuted,marginBottom:2}}>META</div>
-            <div style={{fontFamily:font.display,fontSize:22,color:C.success}}>{usuario.pesoMeta}kg</div>
+            <div style={{fontSize:10,color:C.muted,marginBottom:2}}>ALTURA</div>
+            <div style={{fontFamily:font.display,fontSize:24,color:C.sub}}>{usuario.altura}cm</div>
+            <Spc h={sp.md}/>
+            <div style={{fontSize:10,color:C.muted,marginBottom:2}}>META</div>
+            <div style={{fontFamily:font.display,fontSize:22,color:C.ok}}>{usuario.pesoMeta}kg</div>
           </div>
         </div>
       </div>
 
-      {/* progress card */}
-      <div style={{
-        ...cs.card,
-        background:`linear-gradient(135deg,${usuario.cor}0A,${C.surface})`,
-        border:`1px solid ${usuario.cor}28`,
-        padding:sp.xl,
-      }}>
+      {/* progress */}
+      <div style={{...S.card,background:`linear-gradient(135deg,${usuario.cor}0A,${C.surface})`,
+        border:`1px solid ${usuario.cor}28`,padding:sp.xl}}>
         <div style={{display:"flex",justifyContent:"space-between",marginBottom:sp.lg}}>
           <div>
-            <Label color={usuario.cor}>PROGRESSO TOTAL</Label>
-            <div style={{fontFamily:font.display,fontSize:48,color:usuario.cor,lineHeight:1,letterSpacing:1}}>
+            <Lbl color={usuario.cor}>PROGRESSO TOTAL</Lbl>
+            <div style={{fontFamily:font.display,fontSize:46,color:usuario.cor,lineHeight:1,letterSpacing:1}}>
               {prog.toFixed(0)}<span style={{fontSize:20}}>%</span>
             </div>
           </div>
           <div style={{textAlign:"right"}}>
-            <Label>PERDIDOS</Label>
-            <div style={{fontFamily:font.display,fontSize:36,color:C.success,lineHeight:1}}>-{perdido}kg</div>
-            <div style={{fontSize:11,color:C.textMuted,marginTop:4}}>Faltam {(med.peso-usuario.pesoMeta).toFixed(1)}kg</div>
+            <Lbl>PERDIDOS</Lbl>
+            <div style={{fontFamily:font.display,fontSize:34,color:C.ok,lineHeight:1}}>-{perdido}kg</div>
+            <div style={{fontSize:11,color:C.muted,marginTop:4}}>Faltam {(med.peso-usuario.pesoMeta).toFixed(1)}kg</div>
           </div>
         </div>
-        <ProgressBar value={prog} color={`linear-gradient(90deg,${usuario.cor},${usuario.corEscura})`} height={10} glow/>
+        <PBar value={prog} color={`linear-gradient(90deg,${usuario.cor},${usuario.corEscura})`} h={10} glow/>
         <div style={{display:"flex",justifyContent:"space-between",marginTop:sp.sm}}>
-          <span style={{fontSize:10,color:C.textMuted}}>Início {usuario.pesoInicial}kg</span>
-          <span style={{fontSize:10,color:C.textMuted}}>Meta {usuario.pesoMeta}kg</span>
+          <span style={{fontSize:10,color:C.muted}}>Início {usuario.pesoInicial}kg</span>
+          <span style={{fontSize:10,color:C.muted}}>Meta {usuario.pesoMeta}kg</span>
         </div>
       </div>
 
       {/* chart */}
-      <div style={{...cs.card,marginBottom:sp.lg}}>
-        <Label>📊 EVOLUÇÃO DO PESO</Label>
-        <div style={{background:C.bg,borderRadius:r.md,padding:"16px 8px 8px",marginTop:sp.sm,overflow:"hidden"}}>
+      <div style={S.card}>
+        <Lbl>📊 EVOLUÇÃO DO PESO</Lbl>
+        <div style={{background:C.bg,borderRadius:rad.md,padding:"16px 8px 8px",marginTop:sp.sm,overflow:"hidden"}}>
           <svg viewBox={`0 0 ${hist.length*110} 130`} style={{width:"100%",height:130}}>
             <defs>
-              <linearGradient id={`grad-${usuario.id}`} x1="0%" y1="0%" x2="0%" y2="100%">
+              <linearGradient id={`g-${usuario.id}`} x1="0%" y1="0%" x2="0%" y2="100%">
                 <stop offset="0%" stopColor={usuario.cor} stopOpacity=".3"/>
                 <stop offset="100%" stopColor={usuario.cor} stopOpacity="0"/>
               </linearGradient>
             </defs>
             <polygon
-              points={[...hist.map((h,i)=>`${i*110+55},${100-((h.peso-minP)/wRange)*75}`),`${(hist.length-1)*110+55},110 55,110`].join(" ")}
-              fill={`url(#grad-${usuario.id})`}
+              points={[
+                ...hist.map((h,i) => `${i*110+55},${100-((h.peso-minP)/wRange)*75}`),
+                `${(hist.length-1)*110+55},110`, `55,110`
+              ].join(" ")}
+              fill={`url(#g-${usuario.id})`}
             />
             <polyline
-              points={hist.map((h,i)=>`${i*110+55},${100-((h.peso-minP)/wRange)*75}`).join(" ")}
+              points={hist.map((h,i) => `${i*110+55},${100-((h.peso-minP)/wRange)*75}`).join(" ")}
               fill="none" stroke={usuario.cor} strokeWidth="2.5"
               strokeLinecap="round" strokeLinejoin="round"
             />
-            {hist.map((h,i)=>{
-              const x=i*110+55;
-              const y=100-((h.peso-minP)/wRange)*75;
+            {hist.map((h,i) => {
+              const x = i*110+55;
+              const y = 100-((h.peso-minP)/wRange)*75;
               return (
                 <g key={i}>
                   <circle cx={x} cy={y} r="6" fill={usuario.cor}/>
                   <text x={x} y={y-12} textAnchor="middle" fill={usuario.cor} fontSize="11" fontWeight="bold">{h.peso}kg</text>
-                  <text x={x} y="124" textAnchor="middle" fill={C.textMuted} fontSize="9">{h.data}</text>
+                  <text x={x} y="124" textAnchor="middle" fill={C.muted} fontSize="9">{h.data}</text>
                 </g>
               );
             })}
@@ -1704,80 +1224,43 @@ function Evolucao({ usuario, med, salvarMedida }) {
       </div>
 
       {/* measurements */}
-      <div style={cs.card}>
+      <div style={S.card}>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:sp.md}}>
-          <Label>📏 MEDIDAS CORPORAIS</Label>
-          <button className="tap-scale"
-            onClick={()=>editando?setEditando(false):setEditando(true)}
-            style={{
-              background:"none",
-              border:`1px solid ${editando?C.danger:usuario.cor}`,
-              borderRadius:r.pill,padding:"4px 14px",
-              color:editando?C.danger:usuario.cor,
-              fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:font.body,
-            }}>
-            {editando?"✕ Cancelar":"✏️ Editar"}
+          <Lbl>📏 MEDIDAS CORPORAIS</Lbl>
+          <button className="tap" onClick={() => editando ? setEditando(false) : setEditando(true)}
+            style={{background:"none",border:`1px solid ${editando?C.danger:usuario.cor}`,
+              borderRadius:rad.pill,padding:"4px 14px",color:editando?C.danger:usuario.cor,
+              fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:font.body}}>
+            {editando ? "✕ Cancelar" : "✏️ Editar"}
           </button>
         </div>
-
-        {[["peso","⚖️","Peso","kg"],["peito","📏","Peitoral","cm"],["cintura","📏","Cintura","cm"],["quadril","📏","Quadril","cm"],["braco","💪","Braço","cm"],["coxa","🦵","Coxa","cm"]].map(([campo,ic,label,unidade])=>(
-          <div key={campo} style={{
-            display:"flex",alignItems:"center",gap:sp.md,
-            padding:`${sp.sm}px 0`,
-            borderBottom:`1px solid ${C.border}`,
-          }}>
+        {[["peso","⚖️","Peso","kg"],["peito","📏","Peitoral","cm"],["cintura","📏","Cintura","cm"],
+          ["quadril","📏","Quadril","cm"],["braco","💪","Braço","cm"],["coxa","🦵","Coxa","cm"]].map(([campo,ic,label,un]) => (
+          <div key={campo} style={{display:"flex",alignItems:"center",gap:sp.md,
+            padding:`${sp.sm}px 0`,borderBottom:`1px solid ${C.border}`}}>
             <span style={{fontSize:18,width:26,flexShrink:0}}>{ic}</span>
-            <span style={{flex:1,fontSize:13,color:C.textSub}}>{label}</span>
+            <span style={{flex:1,fontSize:13,color:C.sub}}>{label}</span>
             {editando ? (
               <input type="number" value={form[campo]}
-                onChange={e=>setForm(p=>({...p,[campo]:e.target.value}))}
-                style={{
-                  width:80,background:C.surfaceHigh,
-                  border:`1px solid ${usuario.cor}`,
-                  borderRadius:r.sm,padding:"7px 10px",
-                  color:C.text,fontSize:14,textAlign:"center",
-                  fontFamily:font.body,
-                }}/>
+                onChange={e => setForm(p => ({ ...p, [campo]: e.target.value }))}
+                style={{width:80,background:C.surfaceHi,border:`1px solid ${usuario.cor}`,
+                  borderRadius:rad.sm,padding:"7px 10px",color:C.text,fontSize:14,
+                  textAlign:"center",fontFamily:font.body}}/>
             ) : (
               <span style={{fontFamily:font.display,fontSize:20,color:usuario.cor,letterSpacing:.5}}>
-                {med[campo]} {unidade}
+                {med[campo]} {un}
               </span>
             )}
           </div>
         ))}
-
         {editando && (
-          <button className="tap-scale"
-            onClick={salvar}
-            style={{...cs.btn,background:`linear-gradient(135deg,${usuario.cor},${usuario.corEscura})`,marginTop:sp.md,marginBottom:0}}>
+          <button className="tap" onClick={salvar}
+            style={{...S.btn,background:`linear-gradient(135deg,${usuario.cor},${usuario.corEscura})`,marginTop:sp.md,marginBottom:0}}>
             ✓ SALVAR MEDIDAS
           </button>
         )}
       </div>
-
-      {/* weekly freq */}
-      <div style={{...cs.card,marginBottom:sp.xl}}>
-        <Label>📅 FREQUÊNCIA SEMANAL</Label>
-        <div style={{display:"flex",gap:5,marginTop:sp.sm}}>
-          {DIAS.map((d,i)=>{
-            const t=[false,true,true,true,true,false,true][i];
-            const h=new Date().getDay()===i;
-            return (
-              <div key={d} style={{
-                flex:1,borderRadius:r.md,
-                padding:"8px 0",
-                display:"flex",flexDirection:"column",alignItems:"center",gap:3,
-                background:h?`${usuario.cor}18`:C.surfaceHigh,
-                border:`1px solid ${h?usuario.cor:C.border}`,
-              }}>
-                <span style={{fontSize:9,color:h?usuario.cor:C.textMuted,fontWeight:h?700:400}}>{d}</span>
-                <span style={{fontSize:14}}>{t?"✅":"❌"}</span>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-      <Spacer h={80}/>
+      <Spc h={80}/>
     </div>
   );
 }
@@ -1785,89 +1268,82 @@ function Evolucao({ usuario, med, salvarMedida }) {
 // ════════════════════════════════════════════════════════════════════
 // PERFIL
 // ════════════════════════════════════════════════════════════════════
-function Perfil({ usuario, med, onLogout, outroPerfil, outroMed }) {
+function Perfil({ usuario, med, onLogout, outroPerfil, outroMed, treinos }) {
   const imcV = imc(med.peso, usuario.altura);
   const imcC = imcCor(imcV);
   const imcT = imcTxt(imcV);
   const prog = pct(med.peso, usuario.pesoInicial, usuario.pesoMeta);
 
   return (
-    <div style={cs.screen}>
-      <div style={cs.pageHead}>
+    <div style={S.screen}>
+      <div style={S.pageHead}>
         <div style={{fontFamily:font.display,fontSize:34,letterSpacing:4,marginBottom:2}}>PERFIL</div>
       </div>
 
-      {/* profile hero */}
-      <div style={{
-        ...cs.card,
-        background:`linear-gradient(145deg,${usuario.cor}12,${C.surface})`,
-        border:`1px solid ${usuario.cor}28`,
-        textAlign:"center",padding:sp.xxl,
-        marginBottom:sp.lg,
-      }}>
+      {/* hero */}
+      <div style={{...S.card,background:`linear-gradient(145deg,${usuario.cor}12,${C.surface})`,
+        border:`1px solid ${usuario.cor}28`,textAlign:"center",padding:sp.xxl}}>
         <div style={{position:"relative",display:"inline-block",marginBottom:sp.lg}}>
-          <img src={usuario.foto} alt={usuario.nome}
-            style={{
-              width:100,height:100,borderRadius:"50%",
-              objectFit:"cover",objectPosition:"top",
-              border:`3px solid ${usuario.cor}`,
-              boxShadow:`0 0 0 6px ${usuario.cor}20`,
-            }}/>
-          <div style={{
-            position:"absolute",bottom:4,right:4,
-            width:20,height:20,borderRadius:"50%",
-            background:usuario.cor,
-            border:`2px solid ${C.bg}`,
-            display:"flex",alignItems:"center",
-            justifyContent:"center",fontSize:10,color:"#000",fontWeight:900,
-          }}>✓</div>
+          <img src={usuario.foto} alt={usuario.nome} style={{width:100,height:100,borderRadius:"50%",
+            objectFit:"cover",objectPosition:"top",border:`3px solid ${usuario.cor}`,
+            boxShadow:`0 0 0 6px ${usuario.cor}20`}}/>
+          <div style={{position:"absolute",bottom:4,right:4,width:20,height:20,borderRadius:"50%",
+            background:usuario.cor,border:`2px solid ${C.bg}`,display:"flex",
+            alignItems:"center",justifyContent:"center",fontSize:10,color:"#000",fontWeight:900}}>✓</div>
         </div>
-        <div style={{fontFamily:font.display,fontSize:34,letterSpacing:4,color:usuario.cor,marginBottom:4}}>{usuario.nome.toUpperCase()}</div>
-        <div style={{fontSize:13,color:C.textSub,marginBottom:sp.sm}}>{usuario.objetivo}</div>
+        <div style={{fontFamily:font.display,fontSize:32,letterSpacing:4,color:usuario.cor,marginBottom:4}}>
+          {usuario.nome.toUpperCase()}
+        </div>
+        <div style={{fontSize:13,color:C.sub,marginBottom:sp.sm}}>{usuario.objetivo}</div>
         <Pill>{usuario.nivel} · {usuario.frequencia}</Pill>
-
         <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:sp.sm,marginTop:sp.lg}}>
-          <Metric icon="⚖️" value={med.peso+"kg"} label="Peso atual" color={usuario.cor}/>
-          <Metric icon="📊" value={imcV} label={imcT} color={imcC}/>
-          <Metric icon="🎯" value={usuario.pesoMeta+"kg"} label="Meta" color={C.success}/>
+          <Num icon="⚖️" value={med.peso+"kg"} label="Peso atual" color={usuario.cor}/>
+          <Num icon="📊" value={imcV} label={imcT} color={imcC}/>
+          <Num icon="🎯" value={usuario.pesoMeta+"kg"} label="Meta" color={C.ok}/>
         </div>
       </div>
 
       {/* progress */}
-      <div style={{...cs.card,marginBottom:sp.lg}}>
+      <div style={S.card}>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:sp.md}}>
-          <Label>PROGRESSO PARA A META</Label>
+          <Lbl>PROGRESSO PARA A META</Lbl>
           <span style={{fontFamily:font.display,fontSize:22,color:usuario.cor}}>{prog.toFixed(0)}%</span>
         </div>
-        <ProgressBar value={prog} color={`linear-gradient(90deg,${usuario.cor},${usuario.corEscura})`} height={8} glow/>
+        <PBar value={prog} color={`linear-gradient(90deg,${usuario.cor},${usuario.corEscura})`} h={8} glow/>
         <div style={{display:"flex",justifyContent:"space-between",marginTop:sp.sm}}>
-          <span style={{fontSize:10,color:C.textMuted}}>Início {usuario.pesoInicial}kg</span>
-          <span style={{fontSize:10,color:C.textMuted}}>Meta {usuario.pesoMeta}kg</span>
+          <span style={{fontSize:10,color:C.muted}}>Início {usuario.pesoInicial}kg</span>
+          <span style={{fontSize:10,color:C.muted}}>Meta {usuario.pesoMeta}kg</span>
         </div>
       </div>
 
       {/* info */}
-      <div style={{...cs.card,marginBottom:sp.lg}}>
-        <Label>📋 INFORMAÇÕES</Label>
-        {[["📏","Altura",usuario.altura+"cm"],["⚖️","Peso Inicial",usuario.pesoInicial+"kg"],["🎯","Objetivo",usuario.objetivo],["🏋️","Nível",usuario.nivel],["📅","Frequência",usuario.frequencia],["🕐","Horário",usuario.horario]].map(([ic,l,v])=>(
-          <div key={l} style={{display:"flex",alignItems:"center",gap:sp.md,padding:`${sp.sm}px 0`,borderBottom:`1px solid ${C.border}`}}>
+      <div style={S.card}>
+        <Lbl>📋 INFORMAÇÕES</Lbl>
+        {[["📏","Altura",usuario.altura+"cm"],["⚖️","Peso Inicial",usuario.pesoInicial+"kg"],
+          ["🎯","Objetivo",usuario.objetivo],["🏋️","Nível",usuario.nivel],
+          ["📅","Frequência",usuario.frequencia],["🕐","Horário",usuario.horario]].map(([ic,l,v]) => (
+          <div key={l} style={{display:"flex",alignItems:"center",gap:sp.md,
+            padding:`${sp.sm}px 0`,borderBottom:`1px solid ${C.border}`}}>
             <span style={{fontSize:16,width:22,flexShrink:0}}>{ic}</span>
-            <span style={{flex:1,fontSize:13,color:C.textSub}}>{l}</span>
+            <span style={{flex:1,fontSize:13,color:C.sub}}>{l}</span>
             <span style={{fontSize:13,color:C.text,fontWeight:500}}>{v}</span>
           </div>
         ))}
       </div>
 
-      {/* partner */}
-      <div style={{...cs.card,border:`1px solid ${outroPerfil.cor}22`,marginBottom:sp.lg}}>
-        <Label>👫 MEU PARCEIRO(A)</Label>
+      {/* parceiro */}
+      <div style={{...S.card,border:`1px solid ${outroPerfil.cor}20`}}>
+        <Lbl>👫 MEU PARCEIRO(A)</Lbl>
         <div style={{display:"flex",alignItems:"center",gap:sp.lg,marginTop:sp.md}}>
-          <img src={outroPerfil.foto} alt={outroPerfil.nome}
-            style={{width:64,height:64,borderRadius:"50%",objectFit:"cover",objectPosition:"top",border:`2px solid ${outroPerfil.cor}`,flexShrink:0}}/>
+          <img src={outroPerfil.foto} alt={outroPerfil.nome} style={{width:64,height:64,borderRadius:"50%",
+            objectFit:"cover",objectPosition:"top",border:`2px solid ${outroPerfil.cor}`,flexShrink:0}}/>
           <div style={{flex:1}}>
-            <div style={{fontFamily:font.display,fontSize:22,letterSpacing:3,color:outroPerfil.cor,lineHeight:1,marginBottom:4}}>{outroPerfil.nome.toUpperCase()}</div>
-            <div style={{fontSize:12,color:C.textSub,marginBottom:sp.sm}}>{outroPerfil.objetivo}</div>
-            <ProgressBar value={pct(outroMed.peso||outroPerfil.pesoInicial,outroPerfil.pesoInicial,outroPerfil.pesoMeta)} color={`linear-gradient(90deg,${outroPerfil.cor},${outroPerfil.corEscura})`} height={4}/>
+            <div style={{fontFamily:font.display,fontSize:22,letterSpacing:3,color:outroPerfil.cor,lineHeight:1,marginBottom:4}}>
+              {outroPerfil.nome.toUpperCase()}
+            </div>
+            <div style={{fontSize:12,color:C.sub,marginBottom:sp.sm}}>{outroPerfil.objetivo}</div>
+            <PBar value={pct(outroMed.peso||outroPerfil.pesoInicial,outroPerfil.pesoInicial,outroPerfil.pesoMeta)}
+              color={`linear-gradient(90deg,${outroPerfil.cor},${outroPerfil.corEscura})`} h={4}/>
             <div style={{fontSize:11,color:outroPerfil.cor,marginTop:4}}>
               {pct(outroMed.peso||outroPerfil.pesoInicial,outroPerfil.pesoInicial,outroPerfil.pesoMeta).toFixed(0)}% da meta
             </div>
@@ -1875,561 +1351,11 @@ function Perfil({ usuario, med, onLogout, outroPerfil, outroMed }) {
         </div>
       </div>
 
-      <button className="tap-scale" onClick={onLogout}
-        style={{...cs.btn,background:C.surface,border:`1px solid ${C.border}`,color:C.textSub,marginBottom:sp.md}}>
+      <button className="tap" onClick={onLogout}
+        style={{...S.btn,background:C.surface,border:`1px solid ${C.border}`,color:C.sub,marginBottom:sp.md}}>
         ↩ TROCAR PERFIL
       </button>
-      <Spacer h={60}/>
+      <Spc h={60}/>
     </div>
   );
 }
-
-
-// ════════════════════════════════════════════════════════════════════
-// DADOS — ALIMENTAÇÃO PRÁTICA
-// ════════════════════════════════════════════════════════════════════
-
-const REFEICOES_RAPIDAS = {
-  cafe: {
-    id: "cafe", titulo: "☀️ Café da Manhã", cor: "#FF9800",
-    opcoes: [
-      {
-        id: "cf1", nome: "Omelete na Air Fryer", tempo: "8 min", kcal: 320, prot: 24, carbo: 4, gordura: 22,
-        dificuldade: 1, tag: ["airfryer","proteico","sem cozinhar"],
-        ingredientes: ["2 ovos", "Sal e pimenta", "Queijo fatiado (opcional)", "Presunto (opcional)"],
-        modo: "1. Bata os ovos com sal. 2. Coloque na forma da Air Fryer (180°C por 6–8 min). 3. Opcional: adicione queijo e presunto no meio do processo.",
-        motivo: "🥇 Muito melhor que pão puro — mais proteína, mais saciedade, menos fome em 2h."
-      },
-      {
-        id: "cf2", nome: "Iogurte Grego + Granola", tempo: "2 min", kcal: 280, prot: 18, carbo: 28, gordura: 8,
-        dificuldade: 1, tag: ["zero cozimento","proteico","rápido"],
-        ingredientes: ["170g iogurte grego integral", "2 colheres de granola", "1 fruta (banana ou morango)"],
-        modo: "1. Abra o pote. 2. Coloque granola por cima. 3. Corte a fruta. Pronto.",
-        motivo: "⚡ 2 minutos. Zero louça. Muito mais nutritivo que pão com margarina."
-      },
-      {
-        id: "cf3", nome: "Ovos Mexidos Rápidos", tempo: "5 min", kcal: 290, prot: 20, carbo: 2, gordura: 22,
-        dificuldade: 1, tag: ["frigideira","proteico","clássico"],
-        ingredientes: ["3 ovos", "1 colher de manteiga", "Sal a gosto", "Cebolinha (opcional)"],
-        modo: "1. Derreta a manteiga. 2. Jogue os ovos diretamente. 3. Mexa em fogo baixo por 3–4 min. Não complique.",
-        motivo: "💪 3 ovos = 20g de proteína. Simples, rápido, poderoso para o emagrecimento."
-      },
-      {
-        id: "cf4", nome: "Vitamina Proteica (sem whey)", tempo: "3 min", kcal: 350, prot: 22, carbo: 38, gordura: 8,
-        dificuldade: 1, tag: ["liquidificador","sem cozimento","proteico"],
-        ingredientes: ["200ml leite desnatado", "1 banana", "1 colher sopa aveia", "1 ovo (opcional)"],
-        modo: "1. Jogue tudo no liquidificador. 2. Bate por 30 segundos. 3. Bebe.",
-        motivo: "🍌 Rápido, nutritivo e muito melhor que qualquer pão industrializado."
-      },
-    ]
-  },
-  almoco: {
-    id: "almoco", titulo: "🍽️ Almoço", cor: "#4CAF50",
-    opcoes: [
-      {
-        id: "al1", nome: "Frango na Air Fryer", tempo: "15 min", kcal: 520, prot: 48, carbo: 2, gordura: 14,
-        dificuldade: 1, tag: ["airfryer","proteico","sem louça"],
-        ingredientes: ["200g filé de frango", "Sal, alho em pó, páprica", "Azeite em spray"],
-        modo: "1. Tempere o frango (sal, alho, páprica). 2. Air Fryer 200°C por 12–15 min. 3. Vire na metade. Pronto. Sem óleo. Sem sujeira.",
-        motivo: "🔥 Air Fryer é o melhor amigo do Wallace solteiro. Frango suculento em 15 min sem lavar nada."
-      },
-      {
-        id: "al2", nome: "Marmita da Semana (prep 1×)", tempo: "40 min (rende 5 dias)", kcal: 550, prot: 45, carbo: 52, gordura: 12,
-        dificuldade: 2, tag: ["marmita","prep semanal","econômico"],
-        ingredientes: ["1kg frango", "500g arroz integral", "500g feijão (lata já cozida)", "Temperos básicos"],
-        modo: "1. Cozinhe o arroz. 2. Frango na panela com tempero — 20 min. 3. Divida em 5 potes. 4. Guarde na geladeira. Aqueça no micro-ondas 3 min.",
-        motivo: "📦 UMA vez na cozinha = 5 almoços resolvidos. Esse é o segredo."
-      },
-      {
-        id: "al3", nome: "Atum com Arroz (marmita express)", tempo: "10 min", kcal: 480, prot: 40, carbo: 48, gordura: 10,
-        dificuldade: 1, tag: ["express","sem cozimento","proteico"],
-        ingredientes: ["1 lata de atum (água)", "Arroz integral cozido (sobra)", "Azeite", "Limão"],
-        modo: "1. Esquente o arroz. 2. Abra a lata de atum. 3. Misture com azeite e limão. Pronto.",
-        motivo: "🥫 Lata de atum é proteína pura que não precisa cozinhar. Sempre tenha no armário."
-      },
-      {
-        id: "al4", nome: "Filé de Peixe na Air Fryer", tempo: "12 min", kcal: 420, prot: 44, carbo: 6, gordura: 12,
-        dificuldade: 1, tag: ["airfryer","peixe","light"],
-        ingredientes: ["200g filé de tilápia ou merluza", "Limão", "Azeite", "Ervas finas, sal"],
-        modo: "1. Tempere o peixe. 2. Air Fryer 180°C por 10–12 min. Pronto. Zero gordura.",
-        motivo: "🐟 Peixe tem menos calorias que frango. Ótimo para variar sem esforço."
-      },
-    ]
-  },
-  lanche: {
-    id: "lanche", titulo: "🍎 Lanche Rápido", cor: "#FF5FA0",
-    opcoes: [
-      {
-        id: "lc1", nome: "Pão + Ovo + Queijo (versão inteligente)", tempo: "5 min", kcal: 320, prot: 20, carbo: 26, gordura: 14,
-        dificuldade: 1, tag: ["pão melhorado","proteico","rápido"],
-        ingredientes: ["2 fatias pão integral", "1 ovo mexido", "1 fatia queijo mussarela"],
-        modo: "1. Frite o ovo. 2. Monte no pão integral. 3. Adicione queijo. Esse pão tem propósito.",
-        motivo: "🍞 Se for comer pão, pelo menos adicione proteína. Isso muda tudo na saciedade."
-      },
-      {
-        id: "lc2", nome: "Iogurte + Banana", tempo: "1 min", kcal: 220, prot: 14, carbo: 30, gordura: 4,
-        dificuldade: 1, tag: ["zero esforço","saciedade","rápido"],
-        ingredientes: ["170g iogurte grego", "1 banana madura"],
-        modo: "1. Abra o iogurte. 2. Corte a banana em cima. Pronto.",
-        motivo: "🍌 1 minuto. Sem cozinhar. Substitui qualquer besteira com muito mais nutrição."
-      },
-      {
-        id: "lc3", nome: "Castanhas + Fruta", tempo: "1 min", kcal: 240, prot: 6, carbo: 22, gordura: 16,
-        dificuldade: 1, tag: ["zero esforço","gordura boa","pratico"],
-        ingredientes: ["1 punhado castanhas/nozes/amendoim", "1 fruta (maçã, pera, laranja)"],
-        modo: "1. Separe as castanhas. 2. Pegue a fruta. Coma.",
-        motivo: "🥜 Gordura boa + fibra = saciedade por horas. Melhor do que qualquer biscoito."
-      },
-      {
-        id: "lc4", nome: "Tapioca Proteica", tempo: "5 min", kcal: 260, prot: 18, carbo: 30, gordura: 8,
-        dificuldade: 1, tag: ["rápido","sem glúten","proteico"],
-        ingredientes: ["3 colheres goma de tapioca", "2 fatias presunto", "1 fatia queijo"],
-        modo: "1. Espalhe a goma na frigideira seca. 2. Espere solidificar (2 min). 3. Vire. Recheie.",
-        motivo: "🫓 Uma tapioca com recheio proteico é muito superior ao pão puro. Rápida igual."
-      },
-    ]
-  },
-  jantar: {
-    id: "jantar", titulo: "🌙 Jantar Leve", cor: "#7C4DFF",
-    opcoes: [
-      {
-        id: "jn1", nome: "Omelete Recheada na Frigideira", tempo: "8 min", kcal: 380, prot: 30, carbo: 4, gordura: 26,
-        dificuldade: 1, tag: ["sem cozimento complexo","proteico","leve"],
-        ingredientes: ["3 ovos", "Queijo, presunto ou frango desfiado", "Sal, azeite"],
-        modo: "1. Bata os ovos. 2. Frigideira com azeite em fogo médio. 3. Despeje. 4. Recheie. 5. Dobre ao meio.",
-        motivo: "🥚 Jantar não precisa ser elaborado. Omelete é completo, rápido e ótimo para emagrecer."
-      },
-      {
-        id: "jn2", nome: "Frango Desfiado + Arroz (da marmita)", tempo: "3 min", kcal: 440, prot: 40, carbo: 42, gordura: 10,
-        dificuldade: 1, tag: ["marmita","sem esforço","reaquecido"],
-        ingredientes: ["Sobra da marmita semanal", "Micro-ondas"],
-        modo: "1. Retire da geladeira. 2. Micro-ondas 3 minutos. 3. Coma.",
-        motivo: "📦 Esse é o motivo de fazer marmita. Jantar de qualidade em 3 minutos."
-      },
-      {
-        id: "jn3", nome: "Sopa Express de Legumes", tempo: "15 min", kcal: 320, prot: 18, carbo: 34, gordura: 8,
-        dificuldade: 2, tag: ["saudável","volume","saciedade"],
-        ingredientes: ["Caldo de galinha (tablete)", "Abobrinha, cenoura, batata doce", "100g frango em cubos"],
-        modo: "1. Ferva 600ml água com caldo. 2. Jogue os legumes picados. 3. 10 min fervendo. 4. Frango desfiado por cima.",
-        motivo: "🥣 Sopa tem muito volume e poucas calorias. Enche o estômago e emagrecimento real."
-      },
-      {
-        id: "jn4", nome: "Batata Doce + Frango na Air Fryer", tempo: "15 min", kcal: 480, prot: 42, carbo: 48, gordura: 10,
-        dificuldade: 1, tag: ["airfryer","completo","carboidrato bom"],
-        ingredientes: ["200g batata doce fatiada", "150g frango temperado", "Azeite, sal"],
-        modo: "1. Fatie a batata doce. 2. Coloque frango e batata na Air Fryer juntos. 3. 200°C por 15 min.",
-        motivo: "🍠 Batata doce = carboidrato de qualidade. Air Fryer faz os dois ao mesmo tempo."
-      },
-    ]
-  },
-};
-
-const ESTRATEGIAS_PRATICAS = [
-  {
-    ic: "📦", titulo: "Marmita Semanal (regra dos 5 dias)",
-    descricao: "Toda semana, separe 40 minutos para cozinhar uma quantidade grande. Isso resolve 5 almoços e 3 jantares sem esforço diário.",
-    passos: ["Frango: 1kg temperado, cozido ou assado", "Arroz integral: 2 xícaras cozidas", "Legumes: brócolis, abobrinha cozidos no vapor", "Divida em 5 potes. Geladeira. Micro-ondas quando quiser."],
-    destaque: "1 hora na cozinha = 8 refeições prontas"
-  },
-  {
-    ic: "🛒", titulo: "Lista de Emergência (armário sempre aberto)",
-    descricao: "Tenha sempre em casa esses itens. Com eles você nunca precisa pedir delivery.",
-    passos: ["Ovos (sempre)", "Atum em lata (proteína instantânea)", "Iogurte grego", "Arroz integral (já cozido em porções)", "Banana e maçã (frutas simples)", "Castanhas (sachê individual)", "Pão integral (apenas 2 fatias com proteína)"],
-    destaque: "Geladeira organizada = cabeça organizada"
-  },
-  {
-    ic: "✈️", titulo: "Regra do Avião (melhor opção disponível)",
-    descricao: "Não existe refeição perfeita quando você está sozinho. Existe MELHOR OPÇÃO DISPONÍVEL. Se só tiver pão, adicione ovo. Se só tiver atum, coma com o que tiver. O inimigo do bom é o ótimo.",
-    passos: ["Tem pão? Adicione ovo/queijo/presunto", "Tem só atum? Come com arroz ou pão integral", "Vai pedir delivery? Escolha grelhado, não frito", "Não tem nada? Iogurte + fruta já é suficiente"],
-    destaque: "Consistência > perfeição. Sempre."
-  },
-  {
-    ic: "⏰", titulo: "Bloqueio Anti-Compulsão (regra dos 15 minutos)",
-    descricao: "Quando bater vontade de pedir delivery ou comer besteira, aplique esta regra:",
-    passos: ["Beba um copo d'água imediatamente", "Espere 15 minutos", "Se ainda quiser, faça a refeição express do app", "Se ainda quiser delivery, escolha uma opção com proteína (não pizza/burguer)"],
-    destaque: "70% das compulsões passam em 15 minutos com água"
-  },
-  {
-    ic: "🔄", titulo: "Rotação Semanal (sem monotonia)",
-    descricao: "Alterne entre 3 bases de proteína para não enjoar:",
-    passos: ["Segunda e terça: Frango (air fryer)", "Quarta: Atum (lata, zero esforço)", "Quinta: Ovo (20 formas de preparar)", "Sexta: Peixe (air fryer, 12 min)", "Sábado: Marmita nova ou folga controlada"],
-    destaque: "Variedade simples = constância real"
-  },
-];
-
-const LISTA_COMPRAS_BASICA = [
-  { cat: "🥚 Proteínas", itens: ["Ovos (bandeja 30)", "Frango filé (1kg)", "Atum em lata (6 unidades)", "Iogurte grego (6 potes)", "Presunto sem capa de gordura", "Queijo mussarela fatiado"] },
-  { cat: "🌾 Carboidratos", itens: ["Arroz integral (1kg)", "Batata doce (500g)", "Aveia em flocos", "Pão integral (de vez em quando)", "Tapioca (goma)"] },
-  { cat: "🥦 Vegetais", itens: ["Abobrinha", "Brócolis", "Cenoura", "Tomate", "Alface (saco pré-lavado)"] },
-  { cat: "🍌 Frutas", itens: ["Banana (cacho)", "Maçã (4 unidades)", "Morango (caixinha)"] },
-  { cat: "🥜 Gorduras Boas", itens: ["Castanha do Pará (pacote)", "Amendoim sem sal", "Azeite extravirgem"] },
-  { cat: "🧂 Temperos", itens: ["Sal light", "Alho em pó", "Páprica defumada", "Orégano", "Caldo de galinha (tablete)"] },
-];
-
-const COMPARATIVO_PAO = [
-  { situacao: "Pão puro (2 fatias)", kcal: 160, prot: 4, saciedade: 1, nota: "❌ Sem proteína" },
-  { situacao: "Pão + ovo mexido", kcal: 300, prot: 18, saciedade: 4, nota: "✅ Muito melhor" },
-  { situacao: "Pão + atum", kcal: 280, prot: 22, saciedade: 5, nota: "✅ Proteico" },
-  { situacao: "Omelete (sem pão)", kcal: 290, prot: 20, saciedade: 5, nota: "⭐ Ideal" },
-  { situacao: "Iogurte + granola", kcal: 280, prot: 18, saciedade: 4, nota: "✅ Rápido igual" },
-];
-
-
-// ════════════════════════════════════════════════════════════════════
-// TELA — ALIMENTAÇÃO PRÁTICA
-// ════════════════════════════════════════════════════════════════════
-function AlimPratica({ usuario, nutri }) {
-  const [aba, setAba] = useState("refeicoes");
-  const [categoriaAtiva, setCatAtiva] = useState("cafe");
-  const [receitaAberta, setReceitaAberta] = useState(null);
-  const [estrategiaAberta, setEstratAtiva] = useState(null);
-  const [marcadas, setMarcadas] = useState(() =>
-    DB.get("ap_marcadas_" + usuario.id + "_" + new Date().toDateString(), {})
-  );
-  const [agua, setAgua] = useState(() =>
-    DB.get("ap_agua_" + usuario.id + "_" + new Date().toDateString(), 0)
-  );
-
-  const marcar = (id) => {
-    const novo = { ...marcadas, [id]: !marcadas[id] };
-    setMarcadas(novo);
-    DB.set("ap_marcadas_" + usuario.id + "_" + new Date().toDateString(), novo);
-  };
-
-  const totalKcal = Object.values(REFEICOES_RAPIDAS)
-    .flatMap(c => c.opcoes)
-    .filter(r => marcadas[r.id])
-    .reduce((a, r) => a + r.kcal, 0);
-
-  const totalProt = Object.values(REFEICOES_RAPIDAS)
-    .flatMap(c => c.opcoes)
-    .filter(r => marcadas[r.id])
-    .reduce((a, r) => a + r.prot, 0);
-
-  const ABAS_INT = [
-    { id: "refeicoes", lb: "🍳 Refeições", },
-    { id: "estrategias", lb: "🧠 Estratégias" },
-    { id: "compras", lb: "🛒 Compras" },
-    { id: "pao", lb: "🍞 vs Pão" },
-  ];
-
-  const cor = usuario.cor;
-
-  // ── Detalhe da Receita ──
-  if (receitaAberta) {
-    const r = receitaAberta;
-    return (
-      <div style={S.tela}>
-        <button style={{ ...S.back, paddingTop: 16 }} onClick={() => setReceitaAberta(null)}>← Voltar</button>
-        <div style={{ ...S.card, border: `1px solid ${cor}44`, padding: 20 }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 12 }}>
-            <div style={{ flex: 1 }}>
-              <div style={{ fontSize: 9, color: cor, letterSpacing: 3, fontWeight: 700, marginBottom: 6 }}>
-                {r.tag.map(t => `#${t}`).join(" ")}
-              </div>
-              <div style={{ fontFamily: "'Bebas Neue',cursive", fontSize: 28, letterSpacing: 2, lineHeight: 1.1 }}>{r.nome}</div>
-            </div>
-            <div style={{ background: `${cor}22`, borderRadius: 12, padding: "8px 14px", textAlign: "center", flexShrink: 0, marginLeft: 12 }}>
-              <div style={{ fontFamily: "'Bebas Neue',cursive", fontSize: 22, color: cor }}>{r.tempo}</div>
-              <div style={{ fontSize: 9, color: "#888" }}>PREPARO</div>
-            </div>
-          </div>
-
-          {/* macros */}
-          <div style={{ display: "flex", background: "#08080f", borderRadius: 12, overflow: "hidden", marginBottom: 16 }}>
-            {[["🔥", r.kcal, "kcal"], ["🥩", r.prot + "g", "prot"], ["🌾", r.carbo + "g", "carbo"], ["🫒", r.gordura + "g", "gord"]].map(([ic, v, l]) => (
-              <div key={l} style={{ flex: 1, padding: "12px 0", textAlign: "center", borderRight: l !== "gord" ? "1px solid #1e1e35" : "none" }}>
-                <div style={{ fontSize: 16 }}>{ic}</div>
-                <div style={{ fontSize: 16, fontWeight: 700, color: cor, lineHeight: 1.2 }}>{v}</div>
-                <div style={{ fontSize: 9, color: "#666" }}>{l}</div>
-              </div>
-            ))}
-          </div>
-
-          {/* dificuldade */}
-          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
-            <span style={{ fontSize: 11, color: "#888" }}>Dificuldade:</span>
-            {[1, 2, 3].map(n => (
-              <div key={n} style={{ width: 24, height: 8, borderRadius: 4, background: n <= r.dificuldade ? cor : "#1e1e35" }} />
-            ))}
-            <span style={{ fontSize: 11, color: cor }}>
-              {r.dificuldade === 1 ? "Fácil" : r.dificuldade === 2 ? "Médio" : "Trabalhoso"}
-            </span>
-          </div>
-
-          {/* ingredientes */}
-          <div style={{ background: "#0a1a0a", borderRadius: 12, padding: 14, marginBottom: 12, border: "1px solid #4CAF5022" }}>
-            <div style={{ fontSize: 10, color: "#4CAF50", fontWeight: 700, letterSpacing: 2, marginBottom: 10 }}>🛒 INGREDIENTES</div>
-            {r.ingredientes.map((ing, i) => (
-              <div key={i} style={{ display: "flex", alignItems: "center", gap: 8, padding: "5px 0", borderBottom: i < r.ingredientes.length - 1 ? "1px solid #0d1a0d" : "none" }}>
-                <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#4CAF50", flexShrink: 0 }} />
-                <span style={{ fontSize: 13, color: "#bbb" }}>{ing}</span>
-              </div>
-            ))}
-          </div>
-
-          {/* modo preparo */}
-          <div style={{ background: "#0a0a1a", borderRadius: 12, padding: 14, marginBottom: 12, border: `1px solid ${cor}22` }}>
-            <div style={{ fontSize: 10, color: cor, fontWeight: 700, letterSpacing: 2, marginBottom: 10 }}>👨‍🍳 MODO DE PREPARO</div>
-            <p style={{ fontSize: 13, color: "#bbb", lineHeight: 1.8, margin: 0 }}>{r.modo}</p>
-          </div>
-
-          {/* motivo */}
-          <div style={{ background: "linear-gradient(135deg, #1a0a1a, #0d0d20)", borderRadius: 12, padding: 14, border: `1px solid ${cor}44` }}>
-            <div style={{ fontSize: 10, color: cor, fontWeight: 700, letterSpacing: 2, marginBottom: 8 }}>💡 POR QUE É MELHOR QUE PÃO PURO</div>
-            <p style={{ fontSize: 14, color: "#ddd", lineHeight: 1.6, margin: 0 }}>{r.motivo}</p>
-          </div>
-        </div>
-
-        <button
-          onClick={() => { marcar(r.id); setReceitaAberta(null); }}
-          style={{ ...S.btnPrimary, background: marcadas[r.id] ? "linear-gradient(135deg,#4CAF50,#1B5E20)" : `linear-gradient(135deg,${cor},${usuario.corEscura})`, marginBottom: 80 }}>
-          {marcadas[r.id] ? "✅ Marcado como comido hoje" : "✓ MARCAR COMO COMIDO HOJE"}
-        </button>
-      </div>
-    );
-  }
-
-  // ── Detalhe da Estratégia ──
-  if (estrategiaAberta !== null) {
-    const est = ESTRATEGIAS_PRATICAS[estrategiaAberta];
-    return (
-      <div style={S.tela}>
-        <button style={{ ...S.back, paddingTop: 16 }} onClick={() => setEstratAtiva(null)}>← Estratégias</button>
-        <div style={{ ...S.card, border: `1px solid ${cor}44`, padding: 20 }}>
-          <div style={{ fontSize: 52, marginBottom: 12 }}>{est.ic}</div>
-          <div style={{ fontFamily: "'Bebas Neue',cursive", fontSize: 28, letterSpacing: 2, marginBottom: 8 }}>{est.titulo}</div>
-          <p style={{ fontSize: 14, color: "#aaa", lineHeight: 1.7, marginBottom: 16 }}>{est.descricao}</p>
-          <div style={{ background: "#0a0a1a", borderRadius: 12, padding: 14, marginBottom: 12 }}>
-            {est.passos.map((p, i) => (
-              <div key={i} style={{ display: "flex", gap: 10, padding: "8px 0", borderBottom: i < est.passos.length - 1 ? "1px solid #1e1e35" : "none" }}>
-                <div style={{ width: 22, height: 22, borderRadius: "50%", background: `${cor}22`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, color: cor, fontWeight: 700, flexShrink: 0 }}>{i + 1}</div>
-                <span style={{ fontSize: 13, color: "#bbb", lineHeight: 1.5 }}>{p}</span>
-              </div>
-            ))}
-          </div>
-          <div style={{ background: `linear-gradient(135deg,${cor}22,${usuario.corEscura}22)`, borderRadius: 12, padding: 14, border: `1px solid ${cor}44` }}>
-            <div style={{ fontSize: 10, color: cor, letterSpacing: 2, fontWeight: 700, marginBottom: 6 }}>⭐ DESTAQUE</div>
-            <div style={{ fontFamily: "'Bebas Neue',cursive", fontSize: 20, color: "#fff", letterSpacing: 1 }}>{est.destaque}</div>
-          </div>
-        </div>
-        <div style={{ height: 80 }} />
-      </div>
-    );
-  }
-
-  // ── TELA PRINCIPAL ──
-  return (
-    <div style={S.tela}>
-      <div style={{ paddingTop: 20, marginBottom: 16 }}>
-        <div style={{ fontFamily: "'Bebas Neue',cursive", fontSize: 36, letterSpacing: 4 }}>COMER BEM</div>
-        <div style={{ fontSize: 12, color: "#888", letterSpacing: 1 }}>Alimentação prática · Sem complicar</div>
-      </div>
-
-      {/* alerta wallace */}
-      {usuario.id === "wallace" && (
-        <div style={{ background: "linear-gradient(135deg,#1a0800,#0d0d20)", borderRadius: 16, padding: 16, marginBottom: 16, border: "1px solid #FF980044" }}>
-          <div style={{ fontSize: 10, color: "#FF9800", letterSpacing: 2, fontWeight: 700, marginBottom: 8 }}>⚡ SEU MODO SOZINHO</div>
-          <p style={{ fontSize: 13, color: "#ccc", lineHeight: 1.6, margin: 0 }}>
-            Quando a Suellen está trabalhando, o pão vira o vilão. Esse módulo existe pra isso: <strong style={{ color: "#FF9800" }}>opções tão rápidas quanto pão, mas que realmente nutrem e emagrecem.</strong>
-          </p>
-        </div>
-      )}
-
-      {/* resumo do dia */}
-      <div style={{ display: "flex", gap: 10, marginBottom: 16 }}>
-        <div style={{ ...S.card, flex: 1, textAlign: "center", padding: 14 }}>
-          <div style={{ fontFamily: "'Bebas Neue',cursive", fontSize: 28, color: cor }}>{totalKcal}</div>
-          <div style={{ fontSize: 10, color: "#888", letterSpacing: 1 }}>KCAL HOJE</div>
-          <div style={{ fontSize: 10, color: totalKcal <= (nutri?.kcalMeta || 2200) ? "#4CAF50" : "#F44336", marginTop: 2 }}>
-            {totalKcal <= (nutri?.kcalMeta || 2200) ? "✓ Dentro da meta" : "⚠ Acima da meta"}
-          </div>
-        </div>
-        <div style={{ ...S.card, flex: 1, textAlign: "center", padding: 14 }}>
-          <div style={{ fontFamily: "'Bebas Neue',cursive", fontSize: 28, color: "#F44336" }}>{totalProt}g</div>
-          <div style={{ fontSize: 10, color: "#888", letterSpacing: 1 }}>PROTEÍNA</div>
-          <div style={{ fontSize: 10, color: "#888", marginTop: 2 }}>meta {nutri?.proteina || 180}g</div>
-        </div>
-        <div style={{ ...S.card, flex: 1, textAlign: "center", padding: 14 }}>
-          <div style={{ fontFamily: "'Bebas Neue',cursive", fontSize: 28, color: "#00B0FF" }}>{(agua * 0.25).toFixed(1)}L</div>
-          <div style={{ fontSize: 10, color: "#888", letterSpacing: 1 }}>ÁGUA</div>
-          <div style={{ display: "flex", gap: 3, justifyContent: "center", marginTop: 6 }}>
-            {[...Array(6)].map((_, i) => (
-              <button key={i} onClick={() => { const n = i + 1; setAgua(n); DB.set("ap_agua_" + usuario.id + "_" + new Date().toDateString(), n); }}
-                style={{ width: 16, height: 16, borderRadius: 4, border: "none", background: i < agua ? "#00B0FF" : "#1e1e35", cursor: "pointer" }} />
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* tabs internas */}
-      <div style={{ display: "flex", gap: 6, marginBottom: 18, overflowX: "auto", paddingBottom: 4 }}>
-        {ABAS_INT.map(a => (
-          <button key={a.id} onClick={() => setAba(a.id)}
-            style={{ flexShrink: 0, background: aba === a.id ? `${cor}1a` : "#111120", border: `1px solid ${aba === a.id ? cor : "#1e1e35"}`, borderRadius: 20, padding: "8px 16px", cursor: "pointer", fontSize: 12, fontWeight: 700, color: aba === a.id ? cor : "#666", transition: "all .2s", whiteSpace: "nowrap" }}>
-            {a.lb}
-          </button>
-        ))}
-      </div>
-
-      {/* ── ABA: REFEIÇÕES ── */}
-      {aba === "refeicoes" && (
-        <div>
-          {/* seletor de categoria */}
-          <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
-            {Object.values(REFEICOES_RAPIDAS).map(cat => (
-              <button key={cat.id} onClick={() => setCatAtiva(cat.id)}
-                style={{ flex: 1, background: categoriaAtiva === cat.id ? `${cat.cor}22` : "#111120", border: `1px solid ${categoriaAtiva === cat.id ? cat.cor : "#1e1e35"}`, borderRadius: 12, padding: "10px 0", cursor: "pointer", transition: "all .2s" }}>
-                <div style={{ fontSize: 18 }}>{cat.titulo.split(" ")[0]}</div>
-                <div style={{ fontSize: 9, color: categoriaAtiva === cat.id ? cat.cor : "#555", fontWeight: 700, marginTop: 2 }}>
-                  {cat.titulo.replace(/^[^\s]+\s/, "").slice(0, 8)}
-                </div>
-              </button>
-            ))}
-          </div>
-
-          {/* cards de receitas */}
-          {REFEICOES_RAPIDAS[categoriaAtiva].opcoes.map(r => (
-            <div key={r.id}
-              style={{ ...S.card, cursor: "pointer", border: `1px solid ${marcadas[r.id] ? "#4CAF5055" : "#1e1e35"}`, background: marcadas[r.id] ? "#0a1a0a" : "#0d0d20", transition: "all .2s" }}
-              onClick={() => setReceitaAberta(r)}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-                <div style={{ flex: 1 }}>
-                  <div style={{ display: "flex", gap: 6, alignItems: "center", marginBottom: 6 }}>
-                    {marcadas[r.id] && <span style={{ fontSize: 14 }}>✅</span>}
-                    <div style={{ fontFamily: "'Bebas Neue',cursive", fontSize: 20, letterSpacing: 1, color: marcadas[r.id] ? "#4CAF50" : "#fff" }}>{r.nome}</div>
-                  </div>
-                  <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 8 }}>
-                    <span style={{ background: `${cor}22`, color: cor, fontSize: 10, padding: "2px 8px", borderRadius: 10, fontWeight: 700 }}>⏱ {r.tempo}</span>
-                    <span style={{ background: "#1e1e35", color: "#888", fontSize: 10, padding: "2px 8px", borderRadius: 10 }}>🔥 {r.kcal}kcal</span>
-                    <span style={{ background: "#1a0808", color: "#F44336", fontSize: 10, padding: "2px 8px", borderRadius: 10 }}>🥩 {r.prot}g</span>
-                  </div>
-                  <div style={{ display: "flex", gap: 4, flexWrap: "wrap" }}>
-                    {r.tag.map(t => (
-                      <span key={t} style={{ fontSize: 9, color: "#555", background: "#111120", padding: "2px 6px", borderRadius: 8 }}>#{t}</span>
-                    ))}
-                  </div>
-                </div>
-                <div style={{ display: "flex", flexDirection: "column", alignItems: "center", marginLeft: 12 }}>
-                  <div style={{ width: 44, height: 44, borderRadius: 12, background: `${cor}18`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22, marginBottom: 4 }}>
-                    {r.tempo.includes("1") && r.tempo.length < 6 ? "⚡" : r.tag.includes("airfryer") ? "🔥" : "🍳"}
-                  </div>
-                  <span style={{ color: "#444", fontSize: 18 }}>›</span>
-                </div>
-              </div>
-              {/* dificuldade visual */}
-              <div style={{ display: "flex", gap: 3, marginTop: 8 }}>
-                {[1, 2, 3].map(n => (
-                  <div key={n} style={{ flex: 1, height: 3, borderRadius: 2, background: n <= r.dificuldade ? cor : "#1e1e35" }} />
-                ))}
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* ── ABA: ESTRATÉGIAS ── */}
-      {aba === "estrategias" && (
-        <div>
-          <div style={{ ...S.card, background: "linear-gradient(135deg,#0a0820,#0d0d20)", border: `1px solid ${cor}33`, marginBottom: 16 }}>
-            <div style={{ fontSize: 10, color: cor, letterSpacing: 2, fontWeight: 700, marginBottom: 8 }}>🧠 MENTALIDADE</div>
-            <p style={{ fontSize: 14, color: "#ddd", lineHeight: 1.7, margin: 0 }}>
-              Emagrecimento não é sobre comer perfeitamente. É sobre <strong style={{ color: cor }}>fazer escolhas melhores na maioria das vezes.</strong> 80% das decisões certas já é suficiente para transformação real.
-            </p>
-          </div>
-          {ESTRATEGIAS_PRATICAS.map((est, i) => (
-            <div key={i} style={{ ...S.card, cursor: "pointer", display: "flex", alignItems: "center", gap: 14, border: "1px solid #1e1e35" }}
-              onClick={() => setEstratAtiva(i)}>
-              <div style={{ fontSize: 36, flexShrink: 0 }}>{est.ic}</div>
-              <div style={{ flex: 1 }}>
-                <div style={{ fontFamily: "'Bebas Neue',cursive", fontSize: 18, letterSpacing: 1, marginBottom: 4 }}>{est.titulo}</div>
-                <div style={{ fontSize: 11, color: "#888", lineHeight: 1.5 }}>{est.descricao.slice(0, 80)}...</div>
-                <div style={{ fontSize: 11, color: cor, fontWeight: 700, marginTop: 6 }}>"{est.destaque}"</div>
-              </div>
-              <span style={{ color: "#444", fontSize: 20, flexShrink: 0 }}>›</span>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* ── ABA: LISTA DE COMPRAS ── */}
-      {aba === "compras" && (
-        <div>
-          <div style={{ ...S.card, background: "linear-gradient(135deg,#0a1a0a,#0d0d20)", border: "1px solid #4CAF5033", marginBottom: 16 }}>
-            <div style={{ fontSize: 10, color: "#4CAF50", letterSpacing: 2, fontWeight: 700, marginBottom: 8 }}>🛒 LISTA ESTRATÉGICA</div>
-            <p style={{ fontSize: 13, color: "#bbb", lineHeight: 1.6, margin: 0 }}>
-              Com esses itens no armário e geladeira, você <strong style={{ color: "#4CAF50" }}>nunca vai precisar pedir delivery por falta de opção.</strong> São ingredientes versáteis, baratos e prontos para usar.
-            </p>
-          </div>
-          {LISTA_COMPRAS_BASICA.map((cat, i) => (
-            <div key={i} style={{ ...S.card, marginBottom: 10 }}>
-              <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 10 }}>{cat.cat}</div>
-              {cat.itens.map((item, j) => (
-                <div key={j} style={{ display: "flex", alignItems: "center", gap: 8, padding: "6px 0", borderBottom: j < cat.itens.length - 1 ? "1px solid #0d0d20" : "none" }}>
-                  <div style={{ width: 18, height: 18, borderRadius: 5, border: "1px solid #1e1e35", background: "#111120", flexShrink: 0 }} />
-                  <span style={{ fontSize: 13, color: "#bbb" }}>{item}</span>
-                </div>
-              ))}
-            </div>
-          ))}
-          <div style={{ ...S.card, background: "#0a0820", border: `1px solid ${cor}33`, marginBottom: 80 }}>
-            <div style={{ fontSize: 10, color: cor, letterSpacing: 2, fontWeight: 700, marginBottom: 8 }}>💡 DICA DE COMPRA</div>
-            <p style={{ fontSize: 13, color: "#bbb", lineHeight: 1.6, margin: 0 }}>
-              Compre <strong style={{ color: cor }}>1 vez por semana.</strong> Separe 30 min no sábado. Geladeira cheia = menos tentação de pedir delivery.
-            </p>
-          </div>
-        </div>
-      )}
-
-      {/* ── ABA: COMPARATIVO PÃO ── */}
-      {aba === "pao" && (
-        <div>
-          <div style={{ ...S.card, background: "linear-gradient(135deg,#1a0800,#0d0d20)", border: "1px solid #FF980044", marginBottom: 16 }}>
-            <div style={{ fontSize: 10, color: "#FF9800", letterSpacing: 2, fontWeight: 700, marginBottom: 8 }}>🍞 A VERDADE SOBRE O PÃO</div>
-            <p style={{ fontSize: 13, color: "#ccc", lineHeight: 1.7, margin: 0 }}>
-              Pão puro não é o problema. O problema é <strong style={{ color: "#FF9800" }}>pão puro substituindo refeições.</strong> Ele tem pouca proteína, gera pico de insulina e você sente fome em 1 hora. Veja a diferença:
-            </p>
-          </div>
-
-          {COMPARATIVO_PAO.map((item, i) => (
-            <div key={i} style={{ ...S.card, border: item.nota.includes("⭐") ? `1px solid ${cor}55` : item.nota.includes("❌") ? "1px solid #F4433622" : "1px solid #4CAF5022" }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
-                <div style={{ fontFamily: "'Bebas Neue',cursive", fontSize: 18, letterSpacing: 1 }}>{item.situacao}</div>
-                <span style={{ fontSize: 13 }}>{item.nota}</span>
-              </div>
-              <div style={{ display: "flex", gap: 16 }}>
-                <div style={{ textAlign: "center" }}>
-                  <div style={{ fontSize: 18, fontWeight: 700, color: "#FF9800" }}>{item.kcal}</div>
-                  <div style={{ fontSize: 9, color: "#666" }}>kcal</div>
-                </div>
-                <div style={{ textAlign: "center" }}>
-                  <div style={{ fontSize: 18, fontWeight: 700, color: "#F44336" }}>{item.prot}g</div>
-                  <div style={{ fontSize: 9, color: "#666" }}>proteína</div>
-                </div>
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 9, color: "#888", marginBottom: 4 }}>saciedade</div>
-                  <div style={{ display: "flex", gap: 3 }}>
-                    {[1, 2, 3, 4, 5].map(n => (
-                      <div key={n} style={{ flex: 1, height: 8, borderRadius: 4, background: n <= item.saciedade ? "#4CAF50" : "#1e1e35" }} />
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </div>
-          ))}
-
-          <div style={{ ...S.card, background: `linear-gradient(135deg,${cor}11,#0d0d20)`, border: `1px solid ${cor}44`, marginBottom: 80 }}>
-            <div style={{ fontSize: 10, color: cor, letterSpacing: 2, fontWeight: 700, marginBottom: 10 }}>🏆 REGRA DE OURO</div>
-            <p style={{ fontFamily: "'Bebas Neue',cursive", fontSize: 22, color: "#fff", letterSpacing: 1, lineHeight: 1.4, margin: 0 }}>
-              NUNCA COMA CARBOIDRATO SOZINHO. SEMPRE ADICIONE PROTEÍNA.
-            </p>
-            <p style={{ fontSize: 13, color: "#aaa", marginTop: 10, lineHeight: 1.6 }}>
-              Pão + ovo = aceitável. Arroz + frango = ótimo. Banana + iogurte = excelente. Pão puro = sabotar a dieta sem perceber.
-            </p>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
-
