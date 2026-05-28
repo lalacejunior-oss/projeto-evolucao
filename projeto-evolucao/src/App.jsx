@@ -1448,6 +1448,8 @@ function Treino({ usuario, treinos, med, registrarTreino, treinoHojeFeit, setTab
         {ordenados.map((ex,i) => {
           const isCardio = cardios.includes(ex);
           const realIdx  = sel.exercicios.indexOf(ex);
+          const cor      = isCardio ? C.info : usuario.cor;
+          const thumb    = `https://img.youtube.com/vi/${ex.vid}/mqdefault.jpg`;
           return (
             <div key={i}>
               {isCardio && i === principais.length && (
@@ -1458,21 +1460,78 @@ function Treino({ usuario, treinos, med, registrarTreino, treinoHojeFeit, setTab
               )}
               <div className="tap"
                 onClick={() => { setExIdx(realIdx); setVista("ex"); }}
-                style={{...S.card,cursor:"pointer",display:"flex",alignItems:"center",
-                  gap:sp.md,borderLeft:`3px solid ${isCardio?C.info:usuario.cor}66`,marginBottom:sp.sm}}>
-                <div style={{width:30,height:30,borderRadius:"50%",background:`${isCardio?C.info:usuario.cor}18`,
-                  flexShrink:0,display:"flex",alignItems:"center",justifyContent:"center",
-                  fontSize:12,fontWeight:700,color:isCardio?C.info:usuario.cor}}>{i+1}</div>
-                <div style={{flex:1}}>
-                  <div style={{fontSize:14,fontWeight:600,marginBottom:2}}>{ex.nome}</div>
-                  <div style={{fontSize:11,color:C.muted,marginBottom:4}}>
-                    {ex.series}×{ex.reps} · {ex.descanso > 0 ? ex.descanso+"s desc." : "contínuo"}
+                style={{
+                  background:C.surface,
+                  borderRadius:rad.xl,
+                  marginBottom:sp.sm,
+                  cursor:"pointer",
+                  overflow:"hidden",
+                  border:`1px solid ${cor}28`,
+                  borderLeft:`3px solid ${cor}`,
+                }}>
+
+                {/* thumbnail strip */}
+                <div style={{position:"relative",width:"100%",height:110,overflow:"hidden",background:"#000"}}>
+                  <img
+                    src={thumb}
+                    alt={ex.nome}
+                    onError={e => { e.target.style.display="none"; e.target.nextSibling.style.display="flex"; }}
+                    style={{width:"100%",height:"100%",objectFit:"cover",display:"block",opacity:.85}}
+                  />
+                  {/* fallback */}
+                  <div style={{display:"none",width:"100%",height:"100%",background:`linear-gradient(135deg,${cor}22,#0a0a1a)`,
+                    alignItems:"center",justifyContent:"center",fontSize:36,position:"absolute",top:0,left:0}}>
+                    🏋️
                   </div>
-                  <Pill color={isCardio?C.info:usuario.cor} bg={`${isCardio?C.info:usuario.cor}15`}>{ex.musculo}</Pill>
+                  {/* gradient overlay bottom */}
+                  <div style={{position:"absolute",bottom:0,left:0,right:0,height:60,
+                    background:"linear-gradient(to top,rgba(14,14,36,.98),transparent)"}}/>
+                  {/* number badge */}
+                  <div style={{position:"absolute",top:8,left:8,width:26,height:26,
+                    borderRadius:"50%",background:`${cor}`,
+                    display:"flex",alignItems:"center",justifyContent:"center",
+                    fontSize:12,fontWeight:700,color:"#000",boxShadow:`0 0 8px ${cor}88`}}>
+                    {i+1}
+                  </div>
+                  {/* play icon */}
+                  <div style={{position:"absolute",top:"50%",left:"50%",
+                    transform:"translate(-50%,-50%)",
+                    width:36,height:36,borderRadius:"50%",
+                    background:"rgba(0,0,0,.55)",border:"2px solid rgba(255,255,255,.4)",
+                    display:"flex",alignItems:"center",justifyContent:"center",fontSize:14,marginLeft:3}}>
+                    ▶
+                  </div>
+                  {/* muscle pill on thumbnail */}
+                  <div style={{position:"absolute",bottom:8,right:8}}>
+                    <span style={{background:`${cor}dd`,color:"#000",fontSize:9,fontWeight:700,
+                      padding:"2px 8px",borderRadius:rad.pill,letterSpacing:.5}}>
+                      {ex.musculo.split("·")[0].trim()}
+                    </span>
+                  </div>
                 </div>
-                <div style={{textAlign:"right",flexShrink:0}}>
-                  <div style={{fontSize:11,color:C.muted}}>{ex.kcal*ex.series}kcal</div>
-                  <span style={{color:C.muted,fontSize:18}}>›</span>
+
+                {/* info row */}
+                <div style={{padding:`${sp.sm}px ${sp.md}px ${sp.md}px`,display:"flex",alignItems:"center",gap:sp.sm}}>
+                  <div style={{flex:1}}>
+                    <div style={{fontSize:14,fontWeight:700,color:C.text,marginBottom:3,lineHeight:1.3}}>
+                      {ex.nome}
+                    </div>
+                    <div style={{display:"flex",gap:sp.sm,flexWrap:"wrap",alignItems:"center"}}>
+                      <span style={{background:C.surfaceHi,borderRadius:rad.pill,
+                        padding:"2px 10px",fontSize:11,fontWeight:600,color:cor}}>
+                        {ex.series}×{ex.reps}
+                      </span>
+                      <span style={{background:C.surfaceHi,borderRadius:rad.pill,
+                        padding:"2px 10px",fontSize:11,color:C.muted}}>
+                        ⏱ {ex.descanso > 0 ? ex.descanso+"s" : "livre"}
+                      </span>
+                      <span style={{background:C.surfaceHi,borderRadius:rad.pill,
+                        padding:"2px 10px",fontSize:11,color:"#F59E0B"}}>
+                        🔥 {ex.kcal*ex.series}kcal
+                      </span>
+                    </div>
+                  </div>
+                  <span style={{color:C.muted,fontSize:20,flexShrink:0}}>›</span>
                 </div>
               </div>
             </div>
